@@ -1,13 +1,14 @@
 /*
- * Airobot Vent Card – Home Assistant Lovelace kaart Airobot ventilatsiooniseadmetele
- * (L, L5, S1, S2, V3, V4, V6, V8) Modbus TCP integratsiooni jaoks.
+ * Airobot Vent Card – Home Assistant Lovelace card for Airobot heat recovery
+ * ventilation units (L, L5, S1, S2, V3, V4, V6, V8) connected over Modbus TCP.
+ * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.2.0";
+const CARD_VERSION = "0.3.0";
 
 const DEFAULTS = {
-  name: "Ventilatsioon",
   theme: "auto", // auto | light | dark
+  language: "auto", // auto | et | en
   mode_auto_option: "Automaatne",
   mode_manual_option: "Käsitsi",
   room_co2_limit: 1200,
@@ -68,11 +69,107 @@ const ICON = {
   pause: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 6v12"/><path d="M15 6v12"/></svg>',
 };
 
+
+const I18N = {
+  et: {
+    title: "Ventilatsioon",
+    err_no_config: "Seadistus puudub",
+    err_room: (i) => `rooms[${i}]: "entity" on kohustuslik`,
+    info_pause: "Paus – ventilatsioon seisab. Ära jäta seadet pikalt seisma.",
+    info_boost: "Õhutus – täiskiirus, lõpeb seadme taimeri järgi",
+    info_over: "Ülerõhk – väljatõmme aeglasem, lõpeb seadme taimeri järgi",
+    info_manual: "Käsitsi juhtimine – tase püsib, kuni muudad",
+    info_co2: "CO₂ üle piiri – Airobot tõstab taset",
+    info_rh: "Niiskus üle piiri – Airobot tõstab taset",
+    info_ok: "Õhk on puhas – Airobot hoiab madalat taset",
+    filter_replace: "Filter: vaheta!",
+    filter_days: (d) => `Filter ${d} p`,
+    preheater_on: "Eelsoojendi sees", preheater_off: "Eelsoojendi väljas",
+    bypass_on: "Bypass avatud", bypass_off: "Bypass suletud",
+    outside: "VÄLJAS", inside: "TOAS",
+    outdoor: "Välisõhk", exhaust: "Heitõhk", extract: "Väljatõmme", supply: "Sissepuhe",
+    level: "tase", schematic: "Ventilatsiooni skeem",
+    auto: "Auto", manual: "Käsitsi",
+    overpressure: "Ülerõhk", boost: "Õhutus", pause: "Paus",
+    dec: "Vähenda taset", inc: "Suurenda taset", level_aria: (l) => `Tase ${l} / 10`,
+    rooms: "Toad", humidity_short: "RH",
+    // redaktor
+    g_rooms: "Toad (toaandurite CO₂)", g_temps: "Temperatuurid", g_fans: "Ventilaatorid ja energia",
+    g_control: "Juhtimine", g_air: "Õhukvaliteet", g_status: "Olekud ja filter", g_advanced: "Täpsemalt",
+    f_name: "Pealkiri", f_theme: "Teema", f_language: "Keel",
+    f_room_entities: "Toaandurid (CO₂)", f_room_co2_limit: "Tubade CO₂ piir",
+    f_mode_auto_option: "Režiimi valiku nimi: automaatne", f_mode_manual_option: "Režiimi valiku nimi: käsitsi",
+    o_theme_auto: "Automaatne (HA teema järgi)", o_light: "Hele", o_dark: "Tume",
+    o_lang_auto: "Automaatne (HA keele järgi)",
+    h_rooms: "Plokk „Toad“ on kaardil ainult siis, kui siia on lisatud vähemalt üks andur.",
+    h_mode_auto: "Režiimi olemi (select) valik, mis tähendab automaatset režiimi.",
+    h_entity: "Tühjaks jäetud väli peidab vastava osa kaardilt.",
+    h_name: "Tühi = vaikimisi pealkiri valitud keeles.",
+    e_outdoor_temp: "Välisõhk", e_supply_temp: "Sissepuhe", e_extract_temp: "Väljatõmme (toaõhk)", e_exhaust_temp: "Heitõhk",
+    e_supply_level: "Sissepuhke ventilaatori tase (0–10)", e_exhaust_level: "Väljatõmbe ventilaatori tase (0–10)",
+    e_airflow: "Õhuhulk (m³/h)", e_efficiency: "Soojustagastuse kasutegur (%)", e_power: "Elektritarve (W)",
+    e_mode: "Režiim (Auto / Käsitsi)", e_manual_level: "Käsitsi tase", e_boost: "Õhutus (boost)",
+    e_overpressure: "Ülerõhk (kamin)", e_power_switch: "Toide (Paus)",
+    e_co2: "CO₂", e_co2_setpoint: "CO₂ seadepunkt", e_humidity: "Niiskus", e_humidity_setpoint: "Niiskuse seadepunkt",
+    e_voc: "VOC indeks", e_voc_setpoint: "VOC seadepunkt", e_pm25: "PM2.5", e_pm25_setpoint: "PM2.5 seadepunkt",
+    e_preheater: "Eelsoojendi sees", e_bypass: "Bypass avatud", e_filter_age: "Filtri vanus (h)",
+    e_filter_interval: "Filtri vahetusintervall (h)", e_filter_alert: "Filtri vahetuse hoiatus",
+  },
+  en: {
+    title: "Ventilation",
+    err_no_config: "Missing configuration",
+    err_room: (i) => `rooms[${i}]: "entity" is required`,
+    info_pause: "Paused – ventilation stopped. Do not leave the unit off for long.",
+    info_boost: "Boost – full speed, ends on the unit's timer",
+    info_over: "Overpressure – extract slowed, ends on the unit's timer",
+    info_manual: "Manual control – level stays until you change it",
+    info_co2: "CO₂ above limit – Airobot is raising the level",
+    info_rh: "Humidity above limit – Airobot is raising the level",
+    info_ok: "Air is clean – Airobot keeps a low level",
+    filter_replace: "Filter: replace!",
+    filter_days: (d) => `Filter ${d} d`,
+    preheater_on: "Preheater on", preheater_off: "Preheater off",
+    bypass_on: "Bypass open", bypass_off: "Bypass closed",
+    outside: "OUTSIDE", inside: "INSIDE",
+    outdoor: "Outdoor", exhaust: "Exhaust", extract: "Extract", supply: "Supply",
+    level: "level", schematic: "Ventilation schematic",
+    auto: "Auto", manual: "Manual",
+    overpressure: "Overpressure", boost: "Boost", pause: "Pause",
+    dec: "Decrease level", inc: "Increase level", level_aria: (l) => `Level ${l} / 10`,
+    rooms: "Rooms", humidity_short: "RH",
+    g_rooms: "Rooms (room CO₂ sensors)", g_temps: "Temperatures", g_fans: "Fans and energy",
+    g_control: "Control", g_air: "Air quality", g_status: "Status and filter", g_advanced: "Advanced",
+    f_name: "Title", f_theme: "Theme", f_language: "Language",
+    f_room_entities: "Room sensors (CO₂)", f_room_co2_limit: "Room CO₂ limit",
+    f_mode_auto_option: "Mode option name: automatic", f_mode_manual_option: "Mode option name: manual",
+    o_theme_auto: "Automatic (follow HA theme)", o_light: "Light", o_dark: "Dark",
+    o_lang_auto: "Automatic (follow HA language)",
+    h_rooms: "The Rooms section is shown only when at least one sensor is added here.",
+    h_mode_auto: "The mode entity (select) option that means automatic mode.",
+    h_entity: "Leave empty to hide this part of the card.",
+    h_name: "Empty = default title in the selected language.",
+    e_outdoor_temp: "Outdoor air", e_supply_temp: "Supply air", e_extract_temp: "Extract air (room)", e_exhaust_temp: "Exhaust air",
+    e_supply_level: "Supply fan level (0–10)", e_exhaust_level: "Extract fan level (0–10)",
+    e_airflow: "Airflow (m³/h)", e_efficiency: "Heat recovery efficiency (%)", e_power: "Power consumption (W)",
+    e_mode: "Mode (Auto / Manual)", e_manual_level: "Manual level", e_boost: "Boost",
+    e_overpressure: "Overpressure (fireplace)", e_power_switch: "Power (Pause)",
+    e_co2: "CO₂", e_co2_setpoint: "CO₂ setpoint", e_humidity: "Humidity", e_humidity_setpoint: "Humidity setpoint",
+    e_voc: "VOC index", e_voc_setpoint: "VOC setpoint", e_pm25: "PM2.5", e_pm25_setpoint: "PM2.5 setpoint",
+    e_preheater: "Preheater on", e_bypass: "Bypass open", e_filter_age: "Filter age (h)",
+    e_filter_interval: "Filter replacement interval (h)", e_filter_alert: "Filter replacement alert",
+  },
+};
+const langOf = (hass, cfg) => {
+  const l = cfg?.language && cfg.language !== "auto" ? cfg.language : (hass?.locale?.language || hass?.language || navigator.language || "en");
+  return String(l).toLowerCase().startsWith("et") ? "et" : "en";
+};
+const tr = (lang, k, ...a) => { const v = (I18N[lang] || I18N.en)[k] ?? I18N.en[k] ?? k; return typeof v === "function" ? v(...a) : v; };
+
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 class AirobotVentCard extends HTMLElement {
   static getStubConfig() {
-    return { name: "Ventilatsioon" };
+    return {};
   }
 
   static getConfigElement() {
@@ -80,10 +177,10 @@ class AirobotVentCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config) throw new Error("Seadistus puudub");
+    if (!config) throw new Error(tr(langOf(null, null), "err_no_config"));
     const rooms = Array.isArray(config.rooms) ? [...config.rooms] : [];
     rooms.forEach((r, i) => {
-      if (!r || typeof r.entity !== "string") throw new Error(`rooms[${i}]: "entity" on kohustuslik`);
+      if (!r || typeof r.entity !== "string") throw new Error(tr(langOf(null, config), "err_room", i));
     });
     // Visuaalse redaktori toaandurid: lihtne olemite nimekiri (nimi = olemi nimi)
     (Array.isArray(config.room_entities) ? config.room_entities : []).forEach((e) => {
@@ -117,6 +214,7 @@ class AirobotVentCard extends HTMLElement {
   }
 
   // ---------- helpers
+  _t(k, ...a) { return tr(langOf(this._hass, this._config), k, ...a); }
   _id(key) { return this._config.entities[key]; }
   _st(key) { const id = this._id(key); return id ? this._hass.states[id] : undefined; }
   _has(key) { const s = this._st(key); return !!s && !["unavailable", "unknown"].includes(s.state); }
@@ -148,22 +246,22 @@ class AirobotVentCard extends HTMLElement {
   }
 
   _info(s) {
-    if (!s.powerOn) return "Paus – ventilatsioon seisab. Ära jäta seadet pikalt seisma.";
-    if (s.boost) return "Õhutus – täiskiirus, lõpeb seadme taimeri järgi";
-    if (s.over) return "Ülerõhk – väljatõmme aeglasem, lõpeb seadme taimeri järgi";
-    if (!s.isAuto) return "Käsitsi juhtimine – tase püsib, kuni muudad";
+    if (!s.powerOn) return this._t("info_pause");
+    if (s.boost) return this._t("info_boost");
+    if (s.over) return this._t("info_over");
+    if (!s.isAuto) return this._t("info_manual");
     const co2 = this._num("co2"), co2sp = this._num("co2_setpoint");
-    if (co2 !== null && co2sp !== null && co2 > co2sp) return "CO₂ üle piiri – Airobot tõstab taset";
+    if (co2 !== null && co2sp !== null && co2 > co2sp) return this._t("info_co2");
     const rh = this._num("humidity"), rhsp = this._num("humidity_setpoint");
-    if (rh !== null && rhsp !== null && rh > rhsp) return "Niiskus üle piiri – Airobot tõstab taset";
-    return "Õhk on puhas – Airobot hoiab madalat taset";
+    if (rh !== null && rhsp !== null && rh > rhsp) return this._t("info_rh");
+    return this._t("info_ok");
   }
 
   // ---------- render
   _render(force) {
     if (!this._config || !this._hass || !this.shadowRoot) return;
     const ids = [...Object.values(this._config.entities), ...this._config.rooms.map((r) => r.entity)].filter(Boolean);
-    const key = ids.map((id) => { const s = this._hass.states[id]; return s ? s.state : "-"; }).join("|") + "|" + this._isDark();
+    const key = ids.map((id) => { const s = this._hass.states[id]; return s ? s.state : "-"; }).join("|") + "|" + this._isDark() + "|" + langOf(this._hass, this._config);
     if (!force && key === this._lastKey) return;
     this._lastKey = key;
 
@@ -180,7 +278,7 @@ class AirobotVentCard extends HTMLElement {
     // --- mõõtmised (ainult olemasolevad)
     const metrics = [
       ["co2", "co2_setpoint", "CO₂", "ppm", 0],
-      ["humidity", "humidity_setpoint", "RH", "%", 0],
+      ["humidity", "humidity_setpoint", this._t("humidity_short"), "%", 0],
       ["voc", "voc_setpoint", "VOC", "", 0],
       ["pm25", "pm25_setpoint", "PM2.5", "µg/m³", 0],
     ].filter(([k]) => this._has(k)).map(([k, spk, label, unit, d]) => {
@@ -214,11 +312,11 @@ class AirobotVentCard extends HTMLElement {
     if (power !== null) chips.push(`${this._fmt(power, 0)} W`);
     if (this._has("filter_age")) {
       const left = ((this._num("filter_interval") ?? 4320) - this._num("filter_age")) / 24;
-      chips.push(this._on("filter_alert") ? "Filter: vaheta!" : `Filter ${this._fmt(Math.max(0, left), 0)} p`);
+      chips.push(this._on("filter_alert") ? this._t("filter_replace") : this._t("filter_days", this._fmt(Math.max(0, left), 0)));
     }
     const status = [];
-    if (this._st("preheater")) status.push(this._on("preheater") ? "Eelsoojendi sees" : "Eelsoojendi väljas");
-    if (this._st("bypass")) status.push(this._on("bypass") ? "Bypass avatud" : "Bypass suletud");
+    if (this._st("preheater")) status.push(this._t(this._on("preheater") ? "preheater_on" : "preheater_off"));
+    if (this._st("bypass")) status.push(this._t(this._on("bypass") ? "bypass_on" : "bypass_off"));
 
     const lvl = this._num("manual_level");
     const segs = Array.from({ length: 10 }, (_, i) => `<span class="seg" style="background:${lvl !== null && i < lvl ? p.cold : p.line}"></span>`).join("");
@@ -271,27 +369,27 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
 </style>
 <ha-card>
   <div class="head">
-    <div class="title">${esc(c.name)}</div>
+    <div class="title">${esc(c.name || this._t("title"))}</div>
     <div class="chips">${chips.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</div>
   </div>
 
   <div class="schem">
-    <svg viewBox="0 0 440 260" role="img" aria-label="Ventilatsiooni skeem">
+    <svg viewBox="0 0 440 260" role="img" aria-label="${this._t("schematic")}">
       <rect x="0" y="0" width="220" height="260" fill="${p.coldBg}"/>
       <rect x="220" y="0" width="220" height="260" fill="${p.warmBg}"/>
-      <text x="14" y="22" font-size="11" font-weight="600" letter-spacing="1" fill="${p.coldText}">VÄLJAS</text>
-      <text x="426" y="22" font-size="11" font-weight="600" letter-spacing="1" fill="${p.warmText}" text-anchor="end">TOAS</text>
+      <text x="14" y="22" font-size="11" font-weight="600" letter-spacing="1" fill="${p.coldText}">${this._t("outside")}</text>
+      <text x="426" y="22" font-size="11" font-weight="600" letter-spacing="1" fill="${p.warmText}" text-anchor="end">${this._t("inside")}</text>
       <path d="M92 80 H160 L280 184 H348" stroke="${p.cold}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".9"/>
       <path d="M348 80 H280 L160 184 H92" stroke="${p.warm}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".9"/>
       <path class="flow" d="M92 80 H160 L280 184 H348" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.sup)}"/>
       <path class="flow" d="M348 80 H280 L160 184 H92" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.ex)}"/>
-      <g data-more="${esc(this._id("outdoor_temp"))}" style="cursor:pointer"><text x="14" y="52" font-size="12" fill="${p.coldText}">Välisõhk</text><text class="num" x="14" y="76" font-size="22" fill="${p.text}">${t("outdoor_temp")}</text></g>
-      <g data-more="${esc(this._id("exhaust_temp"))}" style="cursor:pointer"><text x="14" y="214" font-size="12" fill="${p.coldText}">Heitõhk</text><text class="num" x="14" y="238" font-size="22" fill="${p.text}">${t("exhaust_temp")}</text></g>
-      <g data-more="${esc(this._id("extract_temp"))}" style="cursor:pointer"><text x="426" y="52" font-size="12" fill="${p.warmText}" text-anchor="end">Väljatõmme</text><text class="num" x="426" y="76" font-size="22" fill="${p.text}" text-anchor="end">${t("extract_temp")}</text></g>
-      <g data-more="${esc(this._id("supply_temp"))}" style="cursor:pointer"><text x="426" y="214" font-size="12" fill="${p.warmText}" text-anchor="end">Sissepuhe</text><text class="num" x="426" y="238" font-size="22" fill="${p.text}" text-anchor="end">${t("supply_temp")}</text></g>
+      <g data-more="${esc(this._id("outdoor_temp"))}" style="cursor:pointer"><text x="14" y="52" font-size="12" fill="${p.coldText}">${this._t("outdoor")}</text><text class="num" x="14" y="76" font-size="22" fill="${p.text}">${t("outdoor_temp")}</text></g>
+      <g data-more="${esc(this._id("exhaust_temp"))}" style="cursor:pointer"><text x="14" y="214" font-size="12" fill="${p.coldText}">${this._t("exhaust")}</text><text class="num" x="14" y="238" font-size="22" fill="${p.text}">${t("exhaust_temp")}</text></g>
+      <g data-more="${esc(this._id("extract_temp"))}" style="cursor:pointer"><text x="426" y="52" font-size="12" fill="${p.warmText}" text-anchor="end">${this._t("extract")}</text><text class="num" x="426" y="76" font-size="22" fill="${p.text}" text-anchor="end">${t("extract_temp")}</text></g>
+      <g data-more="${esc(this._id("supply_temp"))}" style="cursor:pointer"><text x="426" y="214" font-size="12" fill="${p.warmText}" text-anchor="end">${this._t("supply")}</text><text class="num" x="426" y="238" font-size="22" fill="${p.text}" text-anchor="end">${t("supply_temp")}</text></g>
       <circle cx="220" cy="132" r="58" fill="${p.hub}" stroke="${p.hubLine}" stroke-width="2"/>
       <text class="num" x="220" y="140" font-size="44" fill="${p.text}" text-anchor="middle">${s.sup === null ? "–" : esc(this._fmt(s.sup, 0))}</text>
-      <text class="num" x="220" y="160" font-size="12" fill="${p.muted}" text-anchor="middle">${airflow !== null && s.powerOn ? esc(this._fmt(airflow, 0)) + " m³/h" : "tase"}</text>
+      <text class="num" x="220" y="160" font-size="12" fill="${p.muted}" text-anchor="middle">${airflow !== null && s.powerOn ? esc(this._fmt(airflow, 0)) + " m³/h" : this._t("level")}</text>
       ${eff !== null ? `<text x="220" y="176" font-size="11" fill="${p.muted}" text-anchor="middle">η ${esc(this._fmt(eff, 0))} %</text>` : ""}
     </svg>
   </div>
@@ -299,26 +397,26 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
   <div class="info">${esc(this._info(s))}</div>
 
   ${s.hasMode ? `<div class="toggle">
-    <button data-mode="auto" aria-pressed="${s.isAuto}" style="${tog(s.isAuto)}">Auto</button>
-    <button data-mode="manual" aria-pressed="${!s.isAuto}" style="${tog(!s.isAuto)}">Käsitsi</button>
+    <button data-mode="auto" aria-pressed="${s.isAuto}" style="${tog(s.isAuto)}">${this._t("auto")}</button>
+    <button data-mode="manual" aria-pressed="${!s.isAuto}" style="${tog(!s.isAuto)}">${this._t("manual")}</button>
   </div>` : ""}
 
   <div class="actions">
-    ${this._st("overpressure") ? `<button data-act="overpressure" aria-pressed="${s.over}" style="${act(s.over)}">${ICON.over}<span>Ülerõhk</span></button>` : ""}
-    ${this._st("boost") ? `<button data-act="boost" aria-pressed="${s.boost}" style="${act(s.boost)}">${ICON.boost}<span>Õhutus</span></button>` : ""}
-    ${this._st("power_switch") ? `<button data-act="pause" aria-pressed="${!s.powerOn}" style="${act(!s.powerOn)}">${ICON.pause}<span>Paus</span></button>` : ""}
+    ${this._st("overpressure") ? `<button data-act="overpressure" aria-pressed="${s.over}" style="${act(s.over)}">${ICON.over}<span>${this._t("overpressure")}</span></button>` : ""}
+    ${this._st("boost") ? `<button data-act="boost" aria-pressed="${s.boost}" style="${act(s.boost)}">${ICON.boost}<span>${this._t("boost")}</span></button>` : ""}
+    ${this._st("power_switch") ? `<button data-act="pause" aria-pressed="${!s.powerOn}" style="${act(!s.powerOn)}">${ICON.pause}<span>${this._t("pause")}</span></button>` : ""}
   </div>
 
   ${showStepper ? `<div class="stepper">
-    <button class="round" data-step="-1" aria-label="Vähenda taset">−</button>
-    <div class="segs" role="img" aria-label="Tase ${lvl ?? "–"} / 10">${segs}</div>
-    <button class="round" data-step="1" aria-label="Suurenda taset">+</button>
+    <button class="round" data-step="-1" aria-label="${this._t("dec")}">−</button>
+    <div class="segs" role="img" aria-label="${this._t("level_aria", lvl ?? "–")}">${segs}</div>
+    <button class="round" data-step="1" aria-label="${this._t("inc")}">+</button>
   </div>` : ""}
 
   ${metrics ? `<div class="metrics">${metrics}</div>` : ""}
 
   ${rooms ? `<div class="rooms">
-    <div class="rhead"><span>Toad</span><span class="badge">${esc(c.room_co2_limit)}</span><span class="unit">CO₂ ppm</span></div>
+    <div class="rhead"><span>${esc(this._t("rooms"))}</span><span class="badge">${esc(c.room_co2_limit)}</span><span class="unit">CO₂ ppm</span></div>
     ${rooms}
   </div>` : ""}
 
@@ -368,47 +466,37 @@ customElements.define("airobot-vent-card", AirobotVentCard);
 // ---------------------------------------------------------------------------
 const ENT = (domain, extra = {}) => ({ entity: { domain, ...extra } });
 const EDITOR_GROUPS = [
-  { title: "Temperatuurid", icon: "mdi:thermometer", fields: [
-    ["outdoor_temp", "Välisõhk", ENT("sensor", { device_class: "temperature" })],
-    ["supply_temp", "Sissepuhe", ENT("sensor", { device_class: "temperature" })],
-    ["extract_temp", "Väljatõmme (toaõhk)", ENT("sensor", { device_class: "temperature" })],
-    ["exhaust_temp", "Heitõhk", ENT("sensor", { device_class: "temperature" })],
+  { key: "g_temps", icon: "mdi:thermometer", fields: [
+    ["outdoor_temp", ENT("sensor", { device_class: "temperature" })],
+    ["supply_temp", ENT("sensor", { device_class: "temperature" })],
+    ["extract_temp", ENT("sensor", { device_class: "temperature" })],
+    ["exhaust_temp", ENT("sensor", { device_class: "temperature" })],
   ] },
-  { title: "Ventilaatorid ja energia", icon: "mdi:fan", fields: [
-    ["supply_level", "Sissepuhke ventilaatori tase (0–10)", ENT("sensor")],
-    ["exhaust_level", "Väljatõmbe ventilaatori tase (0–10)", ENT("sensor")],
-    ["airflow", "Õhuhulk (m³/h)", ENT("sensor")],
-    ["efficiency", "Soojustagastuse kasutegur (%)", ENT("sensor")],
-    ["power", "Elektritarve (W)", ENT("sensor", { device_class: "power" })],
+  { key: "g_fans", icon: "mdi:fan", fields: [
+    ["supply_level", ENT("sensor")], ["exhaust_level", ENT("sensor")], ["airflow", ENT("sensor")],
+    ["efficiency", ENT("sensor")], ["power", ENT("sensor", { device_class: "power" })],
   ] },
-  { title: "Juhtimine", icon: "mdi:tune-variant", fields: [
-    ["mode", "Režiim (Auto / Käsitsi)", ENT(["select", "input_select"])],
-    ["manual_level", "Käsitsi tase", ENT(["number", "input_number"])],
-    ["boost", "Õhutus (boost)", ENT(["switch", "input_boolean"])],
-    ["overpressure", "Ülerõhk (kamin)", ENT(["switch", "input_boolean"])],
-    ["power_switch", "Toide (Paus)", ENT(["switch", "input_boolean"])],
+  { key: "g_control", icon: "mdi:tune-variant", fields: [
+    ["mode", ENT(["select", "input_select"])], ["manual_level", ENT(["number", "input_number"])],
+    ["boost", ENT(["switch", "input_boolean"])], ["overpressure", ENT(["switch", "input_boolean"])],
+    ["power_switch", ENT(["switch", "input_boolean"])],
   ] },
-  { title: "Õhukvaliteet", icon: "mdi:air-filter", fields: [
-    ["co2", "CO₂", ENT("sensor")],
-    ["co2_setpoint", "CO₂ seadepunkt", ENT(["number", "sensor", "input_number"])],
-    ["humidity", "Niiskus", ENT("sensor")],
-    ["humidity_setpoint", "Niiskuse seadepunkt", ENT(["number", "sensor", "input_number"])],
-    ["voc", "VOC indeks", ENT("sensor")],
-    ["voc_setpoint", "VOC seadepunkt", ENT(["number", "sensor", "input_number"])],
-    ["pm25", "PM2.5", ENT("sensor")],
-    ["pm25_setpoint", "PM2.5 seadepunkt", ENT(["number", "sensor", "input_number"])],
+  { key: "g_air", icon: "mdi:air-filter", fields: [
+    ["co2", ENT("sensor")], ["co2_setpoint", ENT(["number", "sensor", "input_number"])],
+    ["humidity", ENT("sensor")], ["humidity_setpoint", ENT(["number", "sensor", "input_number"])],
+    ["voc", ENT("sensor")], ["voc_setpoint", ENT(["number", "sensor", "input_number"])],
+    ["pm25", ENT("sensor")], ["pm25_setpoint", ENT(["number", "sensor", "input_number"])],
   ] },
-  { title: "Olekud ja filter", icon: "mdi:information-outline", fields: [
-    ["preheater", "Eelsoojendi sees", ENT("binary_sensor")],
-    ["bypass", "Bypass avatud", ENT("binary_sensor")],
-    ["filter_age", "Filtri vanus (h)", ENT("sensor")],
-    ["filter_interval", "Filtri vahetusintervall (h)", ENT("sensor")],
-    ["filter_alert", "Filtri vahetuse hoiatus", ENT("binary_sensor")],
+  { key: "g_status", icon: "mdi:information-outline", fields: [
+    ["preheater", ENT("binary_sensor")], ["bypass", ENT("binary_sensor")], ["filter_age", ENT("sensor")],
+    ["filter_interval", ENT("sensor")], ["filter_alert", ENT("binary_sensor")],
   ] },
 ];
 const EKEY = (k) => "e__" + k;
 
 class AirobotVentCardEditor extends HTMLElement {
+  _t(k, ...a) { return tr(langOf(this._hass, this._config), k, ...a); }
+
   setConfig(config) {
     this._config = { ...config };
     this._render();
@@ -432,19 +520,24 @@ class AirobotVentCardEditor extends HTMLElement {
     return [
       { name: "name", selector: { text: {} } },
       { name: "theme", selector: { select: { mode: "dropdown", options: [
-        { value: "auto", label: "Automaatne (HA teema järgi)" },
-        { value: "light", label: "Hele" },
-        { value: "dark", label: "Tume" },
+        { value: "auto", label: this._t("o_theme_auto") },
+        { value: "light", label: this._t("o_light") },
+        { value: "dark", label: this._t("o_dark") },
       ] } } },
-      { type: "expandable", name: "", flatten: true, title: "Toad (toaandurite CO₂)", icon: "mdi:home-thermometer", schema: [
+      { name: "language", selector: { select: { mode: "dropdown", options: [
+        { value: "auto", label: this._t("o_lang_auto") },
+        { value: "et", label: "Eesti" },
+        { value: "en", label: "English" },
+      ] } } },
+      { type: "expandable", name: "", flatten: true, title: this._t("g_rooms"), icon: "mdi:home-thermometer", schema: [
         { name: "room_entities", selector: { entity: { domain: "sensor", multiple: true } } },
         { name: "room_co2_limit", selector: { number: { min: 400, max: 5000, step: 50, mode: "box", unit_of_measurement: "ppm" } } },
       ] },
       ...EDITOR_GROUPS.map((g) => ({
-        type: "expandable", name: "", flatten: true, title: g.title, icon: g.icon,
-        schema: g.fields.map(([k, , sel]) => ({ name: EKEY(k), selector: sel })),
+        type: "expandable", name: "", flatten: true, title: this._t(g.key), icon: g.icon,
+        schema: g.fields.map(([k, sel]) => ({ name: EKEY(k), selector: sel })),
       })),
-      { type: "expandable", name: "", flatten: true, title: "Täpsemalt", icon: "mdi:cog", schema: [
+      { type: "expandable", name: "", flatten: true, title: this._t("g_advanced"), icon: "mdi:cog", schema: [
         { name: "mode_auto_option", selector: { text: {} } },
         { name: "mode_manual_option", selector: { text: {} } },
       ] },
@@ -455,8 +548,9 @@ class AirobotVentCardEditor extends HTMLElement {
     const c = this._config || {};
     const ents = { ...DEFAULTS.entities, ...(c.entities || {}) };
     const d = {
-      name: c.name ?? DEFAULTS.name,
+      name: c.name ?? "",
       theme: c.theme ?? DEFAULTS.theme,
+      language: c.language ?? DEFAULTS.language,
       room_entities: [...(c.room_entities || []), ...((c.rooms || []).map((r) => r.entity))],
       room_co2_limit: c.room_co2_limit ?? DEFAULTS.room_co2_limit,
       mode_auto_option: c.mode_auto_option ?? DEFAULTS.mode_auto_option,
@@ -467,24 +561,14 @@ class AirobotVentCardEditor extends HTMLElement {
   }
 
   _label(s) {
-    const L = {
-      name: "Pealkiri", theme: "Teema", room_entities: "Toaandurid (CO₂)", room_co2_limit: "Tubade CO₂ piir",
-      mode_auto_option: "Režiimi valiku nimi: automaatne", mode_manual_option: "Režiimi valiku nimi: käsitsi",
-    };
-    if (L[s.name]) return L[s.name];
-    if (s.name && s.name.startsWith("e__")) {
-      for (const g of EDITOR_GROUPS) for (const [k, label] of g.fields) if (EKEY(k) === s.name) return label;
-    }
-    return s.title || s.name;
+    if (s.name && s.name.startsWith("e__")) return this._t("e_" + s.name.slice(3));
+    if (s.name) return this._t("f_" + s.name);
+    return s.title;
   }
 
   _helper(s) {
-    const H = {
-      room_entities: "Plokk „Toad“ on kaardil ainult siis, kui siia on lisatud vähemalt üks andur.",
-      mode_auto_option: "Režiimi olemi (select) valik, mis tähendab automaatset režiimi.",
-    };
-    if (s.name && s.name.startsWith("e__")) return "Tühjaks jäetud väli peidab vastava osa kaardilt.";
-    return H[s.name];
+    if (s.name && s.name.startsWith("e__")) return this._t("h_entity");
+    return { room_entities: this._t("h_rooms"), mode_auto_option: this._t("h_mode_auto"), name: this._t("h_name") }[s.name];
   }
 
   _changed(ev) {
@@ -492,8 +576,9 @@ class AirobotVentCardEditor extends HTMLElement {
     const v = ev.detail.value;
     const prev = this._config || {};
     const cfg = { type: prev.type || "custom:airobot-vent-card" };
-    if (v.name && v.name !== DEFAULTS.name) cfg.name = v.name;
+    if (v.name) cfg.name = v.name;
     if (v.theme && v.theme !== DEFAULTS.theme) cfg.theme = v.theme;
+    if (v.language && v.language !== DEFAULTS.language) cfg.language = v.language;
     if (v.mode_auto_option && v.mode_auto_option !== DEFAULTS.mode_auto_option) cfg.mode_auto_option = v.mode_auto_option;
     if (v.mode_manual_option && v.mode_manual_option !== DEFAULTS.mode_manual_option) cfg.mode_manual_option = v.mode_manual_option;
     if (v.room_co2_limit && Number(v.room_co2_limit) !== DEFAULTS.room_co2_limit) cfg.room_co2_limit = Number(v.room_co2_limit);
@@ -513,10 +598,10 @@ class AirobotVentCardEditor extends HTMLElement {
     if (Object.keys(ents).length) cfg.entities = ents;
     // muud võtmed (nt grid_options) jäävad alles
     Object.keys(prev).forEach((k) => {
-      if (!["type", "name", "theme", "mode_auto_option", "mode_manual_option", "room_co2_limit", "rooms", "room_entities", "entities"].includes(k)) cfg[k] = prev[k];
+      if (!["type", "name", "theme", "language", "mode_auto_option", "mode_manual_option", "room_co2_limit", "rooms", "room_entities", "entities"].includes(k)) cfg[k] = prev[k];
     });
     this._config = cfg;
-    if (this._form) this._form.data = this._data();
+    if (this._form) { this._form.schema = this._schema(); this._form.data = this._data(); }
     this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: cfg }, bubbles: true, composed: true }));
   }
 
@@ -549,7 +634,7 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: "airobot-vent-card",
   name: "Airobot Vent Card",
-  description: "Airobot soojustagastusega ventilatsiooniseadme kaart: skeem, režiimid, õhukvaliteet ja toaandurid.",
+  description: "Airobot heat recovery ventilation card: animated schematic, modes, air quality and room CO₂ sensors (Estonian / English).",
   preview: true,
   documentationURL: "https://github.com/kaimo123/airobot-vent-card",
 });

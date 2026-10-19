@@ -1,65 +1,74 @@
 # Airobot Vent Card
 
-Home Assistanti Lovelace kaart Airoboti soojustagastusega ventilatsiooniseadmetele (L, L5, S1, S2, V3, V4, V6, V8), mis on ühendatud Modbus TCP kaudu.
+**English** · [Eesti](README.et.md)
 
-![Kaart tumedas ja heledas teemas](screenshot.png)
+A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L5, S1, S2, V3, V4, V6, V8) connected over Modbus TCP.
 
-## Mida kaart näitab
+![The card in dark and light theme, Estonian and English](screenshot.png)
 
-- **Skeem:** välisõhk, sissepuhe, väljatõmme ja heitõhk. Kanalites liigub õhk ventilaatori taseme kiirusega, kumbki vool oma kiirusega. Ülerõhu ajal on väljatõmme aeglasem ja pausi ajal liikumine peatub.
-- **Tase, õhuhulk ja soojustagastuse kasutegur** skeemi keskel.
-- **Režiim:** Auto ja Käsitsi. Taseme valik (+/−) on nähtaval ainult käsitsi režiimis.
-- **Toimingud:** Ülerõhk (kamin), Õhutus (boost) ja Paus.
-- **Õhukvaliteet:** CO₂, niiskus, VOC ja PM2.5 koos seadepunktiga. Riba muutub kollaseks 85 % juures ja punaseks üle seadepunkti. Näidatakse ainult neid näite, mille olem on olemas.
-- **Toad:** toaandurite CO₂. Plokk on nähtav ainult siis, kui oled seadistuses lisanud `rooms` ja vastavad olemid on olemas.
-- **Olekud:** elektritarve, filtri päevad, eelsoojendi ja bypass.
-- **Hele ja tume teema:** `theme: auto` järgib HA teemat.
+## Features
 
-Igale väärtusele vajutades avaneb selle olemi ajalugu.
+- **Animated schematic**: outdoor, supply, extract and exhaust air. Air moves through the ducts at the speed of each fan, so the supply and extract streams move independently. In overpressure mode the extract stream slows down, and when paused the movement stops.
+- **Fan level, airflow and heat recovery efficiency** in the centre of the schematic.
+- **Mode**: Auto or Manual. The level stepper (+/−) is shown only in Manual mode.
+- **Actions**: Overpressure (fireplace), Boost and Pause.
+- **Air quality**: CO₂, humidity, VOC and PM2.5, each with its setpoint. The bar turns yellow at 85 % of the setpoint and red above it.
+- **Rooms**: CO₂ from room sensors, such as Airobot TE1 -AQ thermostats or DT1. This section is shown only when room sensors are configured.
+- **Status**: power consumption, days until filter change, preheater and bypass.
+- **Light and dark theme**: `theme: auto` follows the Home Assistant theme.
+- **Estonian and English**: `language: auto` follows the Home Assistant language.
+- **Visual editor**: configure everything without YAML.
 
-## Paigaldamine (HACS)
+Any part of the card whose entity is missing is simply left out. Tap any value to open its history.
 
-1. HACS → ⋮ → **Custom repositories** → URL `https://github.com/kaimo123/airobot-vent-card`, tüüp **Dashboard**.
-2. Otsi „Airobot Vent Card“ ja vali **Download**.
-3. Värskenda brauserit (Ctrl+F5).
+## Installation
 
-Käsitsi paigaldamine: kopeeri `airobot-vent-card.js` kausta `/config/www/` ja lisa ressurss `/local/airobot-vent-card.js` (tüüp JavaScript module).
+### HACS (recommended)
 
-## Seadistus
+1. HACS → ⋮ → **Custom repositories** → add `https://github.com/kaimo123/airobot-vent-card` with type **Dashboard**.
+2. Search for **Airobot Vent Card** and select **Download**.
+3. Reload the browser (Ctrl+F5).
 
-### Visuaalne redaktor (YAML-i pole vaja)
+### Manual
 
-1. Juhtpaneelil vali **Muuda → + Lisa kaart** ja otsi **Airobot Vent Card**.
-2. Redaktoris on väljad jaotatud plokkidesse: **Toad**, **Temperatuurid**, **Ventilaatorid ja energia**, **Juhtimine**, **Õhukvaliteet**, **Olekud ja filter** ning **Täpsemalt**. Vali igale väljale olem rippmenüüst.
-3. **Toad:** lisa toaandurite CO₂ olemid. Toa nimi võetakse olemi nimest. Plokk „Toad“ on kaardil ainult siis, kui vähemalt üks andur on lisatud.
-4. Tühjaks jäetud väli peidab vastava osa kaardilt, näiteks PM2.5 või pausi nupu.
+Copy `airobot-vent-card.js` to `/config/www/` and add the resource `/local/airobot-vent-card.js` (type: JavaScript module).
 
-Seadistusse salvestatakse ainult need väärtused, mis vaikimisi nimedest erinevad, nii et YAML jääb lühikeseks.
+## Configuration
+
+### Visual editor
+
+1. On your dashboard select **Edit → + Add card** and search for **Airobot Vent Card**.
+2. The fields are grouped into **Rooms**, **Temperatures**, **Fans and energy**, **Control**, **Air quality**, **Status and filter** and **Advanced**. Pick an entity for each field from the dropdown.
+3. **Rooms**: add the room CO₂ sensors. The room name is taken from the entity name.
+4. Leave a field empty to hide that part of the card, for example PM2.5 or the Pause button.
+
+Only values that differ from the defaults are saved, so the YAML stays short.
 
 ### YAML
 
-Kõige lihtsam kaart (vaikimisi olemid sobivad paketiga `airobot_v6.yaml`):
+The default entity IDs match the Home Assistant package described below, so the minimal card is:
 
 ```yaml
 type: custom:airobot-vent-card
 ```
 
-Kõik valikud:
+All options:
 
 ```yaml
 type: custom:airobot-vent-card
-name: Ventilatsioon
-theme: auto              # auto | light | dark
-mode_auto_option: Automaatne
-mode_manual_option: Käsitsi
+name: Ventilation          # default: "Ventilation" / "Ventilatsioon"
+theme: auto                # auto | light | dark
+language: auto             # auto | en | et
+mode_auto_option: Automaatne   # option of the mode select entity that means Auto
+mode_manual_option: Käsitsi    # option that means Manual
 room_co2_limit: 1200
-room_entities:           # valikuline – toa nimi võetakse olemi nimest
-  - sensor.sininetuba_co2
-  - sensor.soogituba_co2
-rooms:                   # valikuline – kui tahad toale oma nime anda
-  - name: Söögituba
-    entity: sensor.soogituba_co2
-entities:                # muuda ainult neid, mis erinevad vaikimisi nimedest
+room_entities:             # optional, the name comes from the entity
+  - sensor.bedroom_co2
+  - sensor.dining_room_co2
+rooms:                     # optional, use when you want your own room name
+  - name: Living room
+    entity: sensor.living_room_co2
+entities:                  # override only what differs from the defaults
   outdoor_temp: sensor.airobot_valisohu_temperatuur
   supply_temp: sensor.airobot_sissepuhke_temperatuur
   extract_temp: sensor.airobot_valjatombe_temperatuur
@@ -89,13 +98,32 @@ entities:                # muuda ainult neid, mis erinevad vaikimisi nimedest
   filter_alert: binary_sensor.airobot_filtri_vahetus
 ```
 
-Kui mõnda olemit pole, jäetakse vastav osa kaardilt välja: mõõtmine, nupp, toggle või olek. Olemi saab välja lülitada ka nii: `entities: { power: null }`.
+Set an entity to `null` to hide it, for example `entities: { power: null }`.
 
-## Märkused
+## Entities the card expects
 
-- **Paus** lülitab `power_switch` välja (Airoboti coil 4000). Airoboti juhend ei luba seadet pikalt seisma jätta, seepärast käivitab pakett `airobot_v6.yaml` selle 30 minuti pärast uuesti.
-- **Õhutus** (boost) ja **Ülerõhk** lõpevad Airoboti enda taimeri järgi (registrid 2010 ja 2012).
+The card does not talk to the unit directly. It needs Home Assistant entities, typically created with the built-in [Modbus integration](https://www.home-assistant.io/integrations/modbus/) and Airobot's Modbus register map:
 
-## Litsents
+| Card field | Airobot register | Type |
+|---|---|---|
+| Temperatures (outdoor, supply, extract, exhaust) | 1003, 1002, 1001, 1004 (input, °C × 10) | sensor |
+| Supply / extract fan level (0–10) | 1014, 1015 (input) | sensor |
+| Airflow | 1051 (input, constant-flow models) | sensor |
+| Heat recovery efficiency | 1034 (input) | sensor |
+| CO₂, humidity, VOC, PM2.5 | 1011, 1006, 1029, 1031 (input) | sensor |
+| CO₂, humidity, VOC, PM2.5 setpoints | 2004, 2003, 2034, 2064 (holding) | number / sensor |
+| Mode (1 = Auto, 2 = Manual) | 2000 (holding) | select |
+| Manual level | 2005 (holding) | number |
+| Power, Boost, Overpressure | coils 4000, 4004, 4005 | switch |
+| Filter age / interval / alert | 2018, 2017 (holding), coil 4020 | sensor / binary_sensor |
+
+Modbus TCP is off by default. Enable it on the VE1 controller (Settings → Other → Modbus TCP), or ask Airobot support. Use port 502, unit ID 1 and a timeout of at least 3 s, and connect only one Modbus client at a time.
+
+## Notes
+
+- **Pause** turns the power switch off (coil 4000). Airobot advises against leaving the unit off for long, so add an automation that switches it back on after a short time.
+- **Boost** and **Overpressure** end on the unit's own timers (registers 2010 and 2012).
+
+## License
 
 MIT

@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.3.0";
+const CARD_VERSION = "0.4.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -19,6 +19,10 @@ const DEFAULTS = {
     exhaust_temp: "sensor.airobot_heitohu_temperatuur",
     supply_level: "sensor.airobot_sissepuhke_ventilaatori_tase",
     exhaust_level: "sensor.airobot_valjatombe_ventilaatori_tase",
+    supply_rpm: "sensor.airobot_sissepuhke_ventilaatori_poorded",
+    exhaust_rpm: "sensor.airobot_valjatombe_ventilaatori_poorded",
+    supply_airflow: null,
+    exhaust_airflow: null,
     airflow: "sensor.airobot_ohuhulk",
     efficiency: "sensor.airobot_seadme_kasutegur",
     power: "sensor.konkukilp_ventilatsioon_power",
@@ -92,7 +96,7 @@ const I18N = {
     auto: "Auto", manual: "Käsitsi",
     overpressure: "Ülerõhk", boost: "Õhutus", pause: "Paus",
     dec: "Vähenda taset", inc: "Suurenda taset", level_aria: (l) => `Tase ${l} / 10`,
-    rooms: "Toad", humidity_short: "RH",
+    rooms: "Toad", humidity_short: "RH", rpm: "p/min",
     // redaktor
     g_rooms: "Toad (toaandurite CO₂)", g_temps: "Temperatuurid", g_fans: "Ventilaatorid ja energia",
     g_control: "Juhtimine", g_air: "Õhukvaliteet", g_status: "Olekud ja filter", g_advanced: "Täpsemalt",
@@ -107,6 +111,8 @@ const I18N = {
     h_name: "Tühi = vaikimisi pealkiri valitud keeles.",
     e_outdoor_temp: "Välisõhk", e_supply_temp: "Sissepuhe", e_extract_temp: "Väljatõmme (toaõhk)", e_exhaust_temp: "Heitõhk",
     e_supply_level: "Sissepuhke ventilaatori tase (0–10)", e_exhaust_level: "Väljatõmbe ventilaatori tase (0–10)",
+    e_supply_rpm: "Sissepuhke ventilaatori pöörded", e_exhaust_rpm: "Väljatõmbe ventilaatori pöörded",
+    e_supply_airflow: "Sissepuhke õhuhulk (m³/h)", e_exhaust_airflow: "Väljatõmbe õhuhulk (m³/h)",
     e_airflow: "Õhuhulk (m³/h)", e_efficiency: "Soojustagastuse kasutegur (%)", e_power: "Elektritarve (W)",
     e_mode: "Režiim (Auto / Käsitsi)", e_manual_level: "Käsitsi tase", e_boost: "Õhutus (boost)",
     e_overpressure: "Ülerõhk (kamin)", e_power_switch: "Toide (Paus)",
@@ -136,7 +142,7 @@ const I18N = {
     auto: "Auto", manual: "Manual",
     overpressure: "Overpressure", boost: "Boost", pause: "Pause",
     dec: "Decrease level", inc: "Increase level", level_aria: (l) => `Level ${l} / 10`,
-    rooms: "Rooms", humidity_short: "RH",
+    rooms: "Rooms", humidity_short: "RH", rpm: "rpm",
     g_rooms: "Rooms (room CO₂ sensors)", g_temps: "Temperatures", g_fans: "Fans and energy",
     g_control: "Control", g_air: "Air quality", g_status: "Status and filter", g_advanced: "Advanced",
     f_name: "Title", f_theme: "Theme", f_language: "Language",
@@ -150,6 +156,8 @@ const I18N = {
     h_name: "Empty = default title in the selected language.",
     e_outdoor_temp: "Outdoor air", e_supply_temp: "Supply air", e_extract_temp: "Extract air (room)", e_exhaust_temp: "Exhaust air",
     e_supply_level: "Supply fan level (0–10)", e_exhaust_level: "Extract fan level (0–10)",
+    e_supply_rpm: "Supply fan speed (rpm)", e_exhaust_rpm: "Extract fan speed (rpm)",
+    e_supply_airflow: "Supply airflow (m³/h)", e_exhaust_airflow: "Extract airflow (m³/h)",
     e_airflow: "Airflow (m³/h)", e_efficiency: "Heat recovery efficiency (%)", e_power: "Power consumption (W)",
     e_mode: "Mode (Auto / Manual)", e_manual_level: "Manual level", e_boost: "Boost",
     e_overpressure: "Overpressure (fireplace)", e_power_switch: "Power (Pause)",
@@ -271,6 +279,18 @@ class AirobotVentCard extends HTMLElement {
     const flow = (l) => (!l || l <= 0) ? "animation-play-state:paused;opacity:0" : `animation-duration:${(6 / l).toFixed(2)}s`;
 
     const t = (k) => this._fmt(this._num(k), 1) + "°";
+    // kanali kiirus: tase · õhuhulk või pöörded
+    const pill = (lvlKey, flowKey, rpmKey, lvl, x, y, col, more) => {
+      if (lvl === null || lvl === undefined) return "";
+      const flowV = s.powerOn ? this._num(flowKey) : null;
+      const rpmV = s.powerOn ? this._num(rpmKey) : null;
+      const extra = flowV !== null ? `${this._fmt(flowV, 0)} m³/h` : rpmV !== null ? `${this._fmt(rpmV, 0)} ${this._t("rpm")}` : "";
+      const txt = `${this._fmt(lvl, 0)}${extra ? " · " + extra : ""}`;
+      const w = Math.max(28, txt.length * 6.4 + 14);
+      return `<g data-more="${esc(this._id(more) || "")}" style="cursor:pointer">
+        <rect x="${x - w / 2}" y="${y - 11}" width="${w}" height="20" rx="10" fill="${p.hub}" stroke="${col}" stroke-width="1.5"/>
+        <text class="num" x="${x}" y="${y + 3}" font-size="11" fill="${p.text}" text-anchor="middle">${esc(txt)}</text></g>`;
+    };
     const eff = this._num("efficiency");
     const airflow = this._num("airflow");
     const power = this._num("power");
@@ -387,6 +407,8 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
       <g data-more="${esc(this._id("exhaust_temp"))}" style="cursor:pointer"><text x="14" y="214" font-size="12" fill="${p.coldText}">${this._t("exhaust")}</text><text class="num" x="14" y="238" font-size="22" fill="${p.text}">${t("exhaust_temp")}</text></g>
       <g data-more="${esc(this._id("extract_temp"))}" style="cursor:pointer"><text x="426" y="52" font-size="12" fill="${p.warmText}" text-anchor="end">${this._t("extract")}</text><text class="num" x="426" y="76" font-size="22" fill="${p.text}" text-anchor="end">${t("extract_temp")}</text></g>
       <g data-more="${esc(this._id("supply_temp"))}" style="cursor:pointer"><text x="426" y="214" font-size="12" fill="${p.warmText}" text-anchor="end">${this._t("supply")}</text><text class="num" x="426" y="238" font-size="22" fill="${p.text}" text-anchor="end">${t("supply_temp")}</text></g>
+      ${pill("supply_level", "supply_airflow", "supply_rpm", s.sup, 98, 110, p.cold, this._id("supply_rpm") ? "supply_rpm" : "supply_level")}
+      ${pill("exhaust_level", "exhaust_airflow", "exhaust_rpm", s.ex, 342, 110, p.warm, this._id("exhaust_rpm") ? "exhaust_rpm" : "exhaust_level")}
       <circle cx="220" cy="132" r="58" fill="${p.hub}" stroke="${p.hubLine}" stroke-width="2"/>
       <text class="num" x="220" y="140" font-size="44" fill="${p.text}" text-anchor="middle">${s.sup === null ? "–" : esc(this._fmt(s.sup, 0))}</text>
       <text class="num" x="220" y="160" font-size="12" fill="${p.muted}" text-anchor="middle">${airflow !== null && s.powerOn ? esc(this._fmt(airflow, 0)) + " m³/h" : this._t("level")}</text>
@@ -473,7 +495,9 @@ const EDITOR_GROUPS = [
     ["exhaust_temp", ENT("sensor", { device_class: "temperature" })],
   ] },
   { key: "g_fans", icon: "mdi:fan", fields: [
-    ["supply_level", ENT("sensor")], ["exhaust_level", ENT("sensor")], ["airflow", ENT("sensor")],
+    ["supply_level", ENT("sensor")], ["exhaust_level", ENT("sensor")],
+    ["supply_rpm", ENT("sensor")], ["exhaust_rpm", ENT("sensor")],
+    ["supply_airflow", ENT("sensor")], ["exhaust_airflow", ENT("sensor")], ["airflow", ENT("sensor")],
     ["efficiency", ENT("sensor")], ["power", ENT("sensor", { device_class: "power" })],
   ] },
   { key: "g_control", icon: "mdi:tune-variant", fields: [

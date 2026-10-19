@@ -9,6 +9,7 @@ Home Assistanti Lovelace kaart Airoboti soojustagastusega ventilatsiooniseadmete
 ## Mida kaart näitab
 
 - **Skeem:** välisõhk, sissepuhe, väljatõmme ja heitõhk. Kanalites liigub õhk ventilaatori taseme kiirusega, kumbki vool oma kiirusega. Ülerõhu ajal on väljatõmme aeglasem ja pausi ajal liikumine peatub.
+- **Kiirus kanali kohta:** sissepuhke ja väljatõmbe voolul on silt ventilaatori taseme ja õhuhulga (m³/h) või pööretega (p/min).
 - **Tase, õhuhulk ja soojustagastuse kasutegur** skeemi keskel.
 - **Režiim:** Auto ja Käsitsi. Taseme valik (+/−) on nähtaval ainult käsitsi režiimis.
 - **Toimingud:** Ülerõhk (kamin), Õhutus (boost) ja Paus.
@@ -69,6 +70,10 @@ entities:                # muuda ainult neid, mis erinevad vaikimisi nimedest
   exhaust_temp: sensor.airobot_heitohu_temperatuur
   supply_level: sensor.airobot_sissepuhke_ventilaatori_tase
   exhaust_level: sensor.airobot_valjatombe_ventilaatori_tase
+  supply_rpm: sensor.airobot_sissepuhke_ventilaatori_poorded
+  exhaust_rpm: sensor.airobot_valjatombe_ventilaatori_poorded
+  supply_airflow: null          # valikuline, näidatakse pöörete asemel
+  exhaust_airflow: null
   airflow: sensor.airobot_ohuhulk
   efficiency: sensor.airobot_seadme_kasutegur
   power: sensor.konkukilp_ventilatsioon_power

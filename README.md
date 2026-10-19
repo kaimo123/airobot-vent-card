@@ -9,6 +9,7 @@ A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L
 ## Features
 
 - **Animated schematic**: outdoor, supply, extract and exhaust air. Air moves through the ducts at the speed of each fan, so the supply and extract streams move independently. In overpressure mode the extract stream slows down, and when paused the movement stops.
+- **Per-stream speed**: a label on the supply and the extract stream shows the fan level and its airflow (m³/h) or fan speed (rpm).
 - **Fan level, airflow and heat recovery efficiency** in the centre of the schematic.
 - **Mode**: Auto or Manual. The level stepper (+/−) is shown only in Manual mode.
 - **Actions**: Overpressure (fireplace), Boost and Pause.
@@ -75,6 +76,10 @@ entities:                  # override only what differs from the defaults
   exhaust_temp: sensor.airobot_heitohu_temperatuur
   supply_level: sensor.airobot_sissepuhke_ventilaatori_tase
   exhaust_level: sensor.airobot_valjatombe_ventilaatori_tase
+  supply_rpm: sensor.airobot_sissepuhke_ventilaatori_poorded
+  exhaust_rpm: sensor.airobot_valjatombe_ventilaatori_poorded
+  supply_airflow: null          # optional, shown instead of rpm
+  exhaust_airflow: null
   airflow: sensor.airobot_ohuhulk
   efficiency: sensor.airobot_seadme_kasutegur
   power: sensor.konkukilp_ventilatsioon_power
@@ -108,6 +113,8 @@ The card does not talk to the unit directly. It needs Home Assistant entities, t
 |---|---|---|
 | Temperatures (outdoor, supply, extract, exhaust) | 1003, 1002, 1001, 1004 (input, °C × 10) | sensor |
 | Supply / extract fan level (0–10) | 1014, 1015 (input) | sensor |
+| Supply / extract fan speed (rpm) | 1016, 1017 (input) | sensor |
+| Supply / extract airflow | 1051, 1052 (input, constant-flow models) | sensor |
 | Airflow | 1051 (input, constant-flow models) | sensor |
 | Heat recovery efficiency | 1034 (input) | sensor |
 | CO₂, humidity, VOC, PM2.5 | 1011, 1006, 1029, 1031 (input; read PM2.5 as 16-bit) | sensor |

@@ -110,7 +110,7 @@ The card does not talk to the unit directly. It needs Home Assistant entities, t
 | Supply / extract fan level (0–10) | 1014, 1015 (input) | sensor |
 | Airflow | 1051 (input, constant-flow models) | sensor |
 | Heat recovery efficiency | 1034 (input) | sensor |
-| CO₂, humidity, VOC, PM2.5 | 1011, 1006, 1029, 1031 (input) | sensor |
+| CO₂, humidity, VOC, PM2.5 | 1011, 1006, 1029, 1031 (input; read PM2.5 as 16-bit) | sensor |
 | CO₂, humidity, VOC, PM2.5 setpoints | 2004, 2003, 2034, 2064 (holding) | number / sensor |
 | Mode (1 = Auto, 2 = Manual) | 2000 (holding) | select |
 | Manual level | 2005 (holding) | number |

@@ -27,6 +27,17 @@ Käsitsi paigaldamine: kopeeri `airobot-vent-card.js` kausta `/config/www/` ja l
 
 ## Seadistus
 
+### Visuaalne redaktor (YAML-i pole vaja)
+
+1. Juhtpaneelil vali **Muuda → + Lisa kaart** ja otsi **Airobot Vent Card**.
+2. Redaktoris on väljad jaotatud plokkidesse: **Toad**, **Temperatuurid**, **Ventilaatorid ja energia**, **Juhtimine**, **Õhukvaliteet**, **Olekud ja filter** ning **Täpsemalt**. Vali igale väljale olem rippmenüüst.
+3. **Toad:** lisa toaandurite CO₂ olemid. Toa nimi võetakse olemi nimest. Plokk „Toad“ on kaardil ainult siis, kui vähemalt üks andur on lisatud.
+4. Tühjaks jäetud väli peidab vastava osa kaardilt, näiteks PM2.5 või pausi nupu.
+
+Seadistusse salvestatakse ainult need väärtused, mis vaikimisi nimedest erinevad, nii et YAML jääb lühikeseks.
+
+### YAML
+
 Kõige lihtsam kaart (vaikimisi olemid sobivad paketiga `airobot_v6.yaml`):
 
 ```yaml
@@ -42,9 +53,10 @@ theme: auto              # auto | light | dark
 mode_auto_option: Automaatne
 mode_manual_option: Käsitsi
 room_co2_limit: 1200
-rooms:                   # valikuline – plokk on peidus, kui tube pole
-  - name: Sininetuba
-    entity: sensor.sininetuba_co2
+room_entities:           # valikuline – toa nimi võetakse olemi nimest
+  - sensor.sininetuba_co2
+  - sensor.soogituba_co2
+rooms:                   # valikuline – kui tahad toale oma nime anda
   - name: Söögituba
     entity: sensor.soogituba_co2
 entities:                # muuda ainult neid, mis erinevad vaikimisi nimedest

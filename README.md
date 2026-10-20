@@ -6,7 +6,7 @@ A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L
 
 | Normal operation | Winter: preheater on | Summer: bypass open |
 |:---:|:---:|:---:|
-| <img src="screenshot-normal.png" width="280" alt="Normal operation, dark theme, with room CO₂ sensors"> | <img src="screenshot-preheater.png" width="280" alt="Preheater heating the outdoor air, light theme"> | <img src="screenshot-bypass.png" width="280" alt="Summer bypass open, manual mode, Estonian"> |
+| <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-normal.png" width="280" alt="Normal operation, dark theme, with room CO₂ sensors"> | <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-preheater.png" width="280" alt="Preheater heating the outdoor air, light theme"> | <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-bypass.png" width="280" alt="Summer bypass open, manual mode, Estonian"> |
 | Dark theme, Auto mode, room CO₂ sensors | Light theme, heating coil with its power on the outdoor duct | Bypass duct around the exchanger, Manual mode with level stepper, Estonian |
 
 ## Features
@@ -134,6 +134,10 @@ The card does not talk to the unit directly. It needs Home Assistant entities, t
 | Manual level | 2005 (holding) | number |
 | Power, Boost, Overpressure | coils 4000, 4004, 4005 | switch |
 | Filter age / interval / alert | 2018, 2017 (holding), coil 4020 | sensor / binary_sensor |
+
+<img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-wide.png" width="860" alt="Wide card (desktop): schematic and controls side by side">
+
+*Wide card (desktop): schematic and controls side by side*
 
 Modbus TCP is off by default. Enable it on the VE1 controller (Settings → Other → Modbus TCP), or ask Airobot support. Use port 502, unit ID 1 and a timeout of at least 3 s, and connect only one Modbus client at a time.
 

@@ -6,8 +6,12 @@ Home Assistanti Lovelace kaart Airoboti soojustagastusega ventilatsiooniseadmete
 
 | Tavaline töö | Talv: eelsoojendi sees | Suvi: bypass avatud |
 |:---:|:---:|:---:|
-| <img src="screenshot-normal.png" width="280" alt="Tavaline töö, tume teema, toaanduritega"> | <img src="screenshot-preheater.png" width="280" alt="Eelsoojendi soojendab välisõhku, hele teema"> | <img src="screenshot-bypass.png" width="280" alt="Suvine bypass avatud, käsitsi režiim"> |
+| <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-normal.png" width="280" alt="Tavaline töö, tume teema, toaanduritega"> | <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-preheater.png" width="280" alt="Eelsoojendi soojendab välisõhku, hele teema"> | <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-bypass.png" width="280" alt="Suvine bypass avatud, käsitsi režiim"> |
 | Tume teema, Auto režiim, toaandurite CO₂ | Hele teema, küttespiraal ja võimsus välisõhu kanalil | Bypass-kanal soojusvahetist mööda, käsitsi režiim taseme valikuga |
+
+<img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-wide.png" width="860" alt="Lai kaart (arvuti): skeem ja juhtnupud kõrvuti">
+
+*Lai kaart (arvuti): skeem ja juhtnupud kõrvuti*
 
 ## Mida kaart näitab
 

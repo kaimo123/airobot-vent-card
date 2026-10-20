@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.5.0";
+const CARD_VERSION = "0.6.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -231,7 +231,7 @@ class AirobotVentCard extends HTMLElement {
   _on(key) { const s = this._st(key); return !!s && s.state === "on"; }
   _fmt(v, d = 0) {
     if (v === null || v === undefined) return "–";
-    return Number(v).toLocaleString(this._hass?.locale?.language || "et", { minimumFractionDigits: d, maximumFractionDigits: d });
+    return Number(v).toLocaleString(this._hass?.locale?.language || "et", { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: false });
   }
 
   _isDark() {
@@ -299,7 +299,7 @@ class AirobotVentCard extends HTMLElement {
       if (lvl === null || lvl === undefined) return "";
       const spin = lvl > 0 ? `animation-duration:${(4 / lvl).toFixed(2)}s` : "animation-play-state:paused";
       return `<g data-more="${esc(this._id(key))}" style="cursor:pointer">
-        <text class="num" x="${x - 24}" y="${y}" font-size="15" fill="${p.text}" text-anchor="end">${esc(this._fmt(lvl * 10, 0))}%</text>
+        <text x="${x - 24}" y="${y}" font-size="15" fill="${p.text}" text-anchor="end"><tspan font-size="11" fill="${p.muted}">${this._t("level")} </tspan><tspan class="num">${esc(this._fmt(lvl, 0))}</tspan><tspan font-size="11" fill="${p.muted}"> · </tspan><tspan class="num">${esc(this._fmt(lvl * 10, 0))}%</tspan></text>
         <g transform="translate(${x - 18} ${y - 14}) scale(0.75)"><path class="spin" d="${FAN}" fill="${p.text}" style="${spin}"/></g></g>`;
     };
     const eff = this._num("efficiency");
@@ -312,14 +312,17 @@ class AirobotVentCard extends HTMLElement {
       ["humidity", "humidity_setpoint", this._t("humidity_short"), "%", 0],
       ["voc", "voc_setpoint", "VOC", "", 0],
       ["pm25", "pm25_setpoint", "PM2.5", "µg/m³", 0],
-    ].filter(([k]) => this._has(k)).map(([k, spk, label, unit, d]) => {
+    ].filter(([k]) => this._has(k));
+    const metricCount = metrics.length;
+    const metricsHtml = metrics.map(([k, spk, label, unit, d]) => {
       const v = this._num(k), sp = this._num(spk);
       const pct = sp ? Math.max(2, Math.min(100, (v / sp) * 100)) : 0;
       const col = sp && v > sp ? p.bad : sp && v > sp * 0.85 ? p.warn : p.good;
       return `<button class="metric" data-more="${esc(this._id(k))}" aria-label="${esc(label)} ${esc(this._fmt(v, d))} ${esc(unit)}">
-        <span class="mlabel">${esc(label)}${sp !== null ? ` · ${esc(this._fmt(sp, 0))}` : ""}</span>
-        <span class="mval">${esc(this._fmt(v, d))}${unit ? `<span class="munit"> ${esc(unit)}</span>` : ""}</span>
+        <span class="mlabel">${esc(label)}</span>
+        <span class="mval">${esc(this._fmt(v, d))}</span>
         ${sp ? `<span class="bar"><span style="width:${pct}%;background:${col}"></span></span>` : ""}
+        <span class="msub">${sp !== null ? `≤ ${esc(this._fmt(sp, 0))}` : ""}${unit ? `<span class="munit"> ${esc(unit)}</span>` : ""}</span>
       </button>`;
     }).join("");
 
@@ -383,11 +386,14 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
 .round{width:44px;height:44px;border-radius:50%;border:1px solid ${p.line} !important;background:${p.panel2} !important;font-size:22px;text-align:center !important}
 .segs{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
 .seg{height:12px;border-radius:3px}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px}
-.metric{display:flex;flex-direction:column;gap:4px;padding:10px;border-radius:12px;background:${p.panel}}
-.mlabel{font-size:12px;color:${p.muted}}
-.mval{font-size:20px}
-.munit{font-size:12px;color:${p.muted}}
+.metrics{display:grid;gap:6px}
+.metric{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:12px;background:${p.panel};min-width:0}
+.mlabel{font-size:11px;color:${p.muted};white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mval{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.munit{color:${p.muted}}
+.msub{font-size:10px;color:${p.muted};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:12px}
+ha-card{container-type:inline-size}
+@container (max-width:360px){.munit{display:none}.metric{padding:7px}.mval{font-size:17px}}
 .bar{display:block;height:3px;border-radius:2px;background:${p.line};overflow:hidden}
 .bar>span{display:block;height:3px;border-radius:2px}
 .grow{flex:1}
@@ -458,7 +464,7 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
     <button class="round" data-step="1" aria-label="${this._t("inc")}">+</button>
   </div>` : ""}
 
-  ${metrics ? `<div class="metrics">${metrics}</div>` : ""}
+  ${metricCount ? `<div class="metrics" style="grid-template-columns:repeat(${metricCount},minmax(0,1fr))">${metricsHtml}</div>` : ""}
 
   ${rooms ? `<div class="rooms">
     <div class="rhead"><span>${esc(this._t("rooms"))}</span><span class="badge">${esc(c.room_co2_limit)}</span><span class="unit">CO₂ ppm</span></div>

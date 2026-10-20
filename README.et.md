@@ -13,6 +13,7 @@ Home Assistanti Lovelace kaart Airoboti soojustagastusega ventilatsiooniseadmete
 
 - **Skeem:** välisõhk, sissepuhe, väljatõmme ja heitõhk. Kanalites liigub õhk ventilaatori taseme kiirusega, kumbki vool oma kiirusega. Ülerõhu ajal on väljatõmme aeglasem ja pausi ajal liikumine peatub.
 - **Paigutus nagu klassikalisel ERV-kaardil:** iga kanali kohal on temperatuur. Välispoolsete kanalite all on ventilaatori pöörded (p/min, või m³/h, kui voolu õhuhulk on seadistatud). Toapoolsete kanalite all on tase protsentides ja ventilaatori ikoon, mis pöörleb ventilaatori kiirusega.
+- **Rikke riba:** kui seade annab rikke, ilmub kaardi ülaossa punane riba vea nimega (tulekahjusignaal, ventilaator, andur, eelsoojendi, sissepuhe alla 5 °C või tundmatu bitt). Vead loetakse rikete bitimaskist (register 1026).
 - **Eelsoojendi:** kui elektriline eelsoojendi töötab, ilmub välisõhu kanalile helendav küttespiraal koos võimsusega (W / kW).
 - **Suvine bypass:** kui bypass on avatud, liigub välisõhk mööda eraldi BYPASS-kanalit soojusvahetist mööda ja soojusvaheti tee jääb tuhmiks.
 - **Keskel:** soojustagastuse kasutegur ja niiskustagastus. Kogu õhuhulk on üleval keskel.
@@ -102,6 +103,8 @@ entities:                # muuda ainult neid, mis erinevad vaikimisi nimedest
   filter_age: sensor.airobot_filtri_vanus
   filter_interval: sensor.airobot_filtri_intervall
   filter_alert: binary_sensor.airobot_filtri_vahetus
+  errors: sensor.airobot_rikked      # bitimask (olek või atribuut `bitimask`) või tekst
+  fault: binary_sensor.airobot_rike  # valikuline
 ```
 
 Kui mõnda olemit pole, jäetakse vastav osa kaardilt välja: mõõtmine, nupp, toggle või olek. Olemi saab välja lülitada ka nii: `entities: { power: null }`.

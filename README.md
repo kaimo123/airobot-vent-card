@@ -13,6 +13,7 @@ A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L
 
 - **Animated schematic**: outdoor, supply, extract and exhaust air. Air moves through the ducts at the speed of each fan, so the supply and extract streams move independently. In overpressure mode the extract stream slows down, and when paused the movement stops.
 - **Layout like a classic ERV card**: a temperature above each duct; under the outdoor-side ducts the fan speed (rpm, or m³/h if per-stream airflow is configured), under the room-side ducts the fan level in % with a fan icon that spins at fan speed.
+- **Fault banner**: when the unit reports a fault, a red banner at the top names it (fire alarm, fan, sensor, preheater, supply below 5 °C, or an unknown bit), decoded from the fault bitmask (register 1026).
 - **Preheater**: when the electric preheater is on, a glowing heating coil appears on the outdoor-air duct together with its power (W / kW).
 - **Summer bypass**: when the bypass is open, the outdoor air is drawn around the heat exchanger along a separate BYPASS duct and the exchanger path fades out.
 - **Centre**: heat recovery efficiency and moisture recovery. Total airflow is shown at the top.
@@ -108,6 +109,8 @@ entities:                  # override only what differs from the defaults
   filter_age: sensor.airobot_filtri_vanus
   filter_interval: sensor.airobot_filtri_intervall
   filter_alert: binary_sensor.airobot_filtri_vahetus
+  errors: sensor.airobot_rikked      # bitmask (state or `bitimask` attribute) or text
+  fault: binary_sensor.airobot_rike  # optional
 ```
 
 Set an entity to `null` to hide it, for example `entities: { power: null }`.

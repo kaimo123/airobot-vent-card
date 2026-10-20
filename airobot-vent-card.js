@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.8.0";
+const CARD_VERSION = "0.9.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -46,6 +46,8 @@ const DEFAULTS = {
     filter_age: "sensor.airobot_filtri_vanus",
     filter_interval: "sensor.airobot_filtri_intervall",
     filter_alert: "binary_sensor.airobot_filtri_vahetus",
+    errors: "sensor.airobot_rikked",
+    fault: "binary_sensor.airobot_rike",
   },
   rooms: [],
 };
@@ -57,7 +59,7 @@ const PALETTE = {
     schemBg: "#F6F7F9", coldBg: "#E9F0F8", warmBg: "#FBEEE6", hub: "#FFFFFF", hubLine: "#D5DAE0",
     toggleBg: "#B8F5A8", toggleOn: "#1B1F24", toggleOnText: "#FFFFFF", toggleOffText: "#2D5A27",
     actOn: "#1B1F24", actOnText: "#FFFFFF", actOff: "#EEF1F4", actOffText: "#1B1F24",
-    good: "#2E7D4F", warn: "#B26A00", bad: "#B3261E", badge: "#EEF1F4", heat: "#D93A12",
+    good: "#2E7D4F", warn: "#B26A00", bad: "#B3261E", badge: "#EEF1F4", heat: "#D93A12", faultBg: "#B3261E", faultText: "#FFFFFF",
   },
   dark: {
     bg: "#212428", panel: "#2A2E33", panel2: "#2E3237", line: "#33373D", text: "#ECEEF0", muted: "#9AA3AD",
@@ -65,7 +67,7 @@ const PALETTE = {
     schemBg: "#1A1C1F", coldBg: "#1A1C1F", warmBg: "#1A1C1F", hub: "#2E3237", hubLine: "#3A3F46",
     toggleBg: "#B8F5A8", toggleOn: "#17191C", toggleOnText: "#ECEEF0", toggleOffText: "#2D5A27",
     actOn: "#ECEEF0", actOnText: "#17191C", actOff: "#17191C", actOffText: "#ECEEF0",
-    good: "#8FD97C", warn: "#F2C14E", bad: "#FF8A80", badge: "#17191C", heat: "#FF7A45",
+    good: "#8FD97C", warn: "#F2C14E", bad: "#FF8A80", badge: "#17191C", heat: "#FF7A45", faultBg: "#8C1D18", faultText: "#FFFFFF",
   },
 };
 
@@ -79,6 +81,9 @@ const ICON = {
 const I18N = {
   et: {
     title: "Ventilatsioon",
+    fault_title: "Rike", fault_unknown: (b) => `Tundmatu viga (bitt ${b})`,
+    err_bits: { 1: "Tulekahjusignaal", 2: "Sissepuhke ventilaator", 4: "Väljatõmbe ventilaator", 8: "Väljatõmbe andur", 16: "Sissepuhke andur", 32: "Välisõhu andur", 64: "Heitõhu andur", 128: "Lisaandur", 256: "CO₂ andur", 512: "Eelsoojendi", 1024: "Sissepuhe alla 5 °C" },
+    e_errors: "Rikete andur (bitimask või tekst)", e_fault: "Rikke binaarandur",
     err_no_config: "Seadistus puudub",
     err_room: (i) => `rooms[${i}]: "entity" on kohustuslik`,
     info_pause: "Paus – ventilatsioon seisab. Ära jäta seadet pikalt seisma.",
@@ -125,6 +130,9 @@ const I18N = {
   },
   en: {
     title: "Ventilation",
+    fault_title: "Fault", fault_unknown: (b) => `Unknown fault (bit ${b})`,
+    err_bits: { 1: "Fire alarm", 2: "Supply fan", 4: "Extract fan", 8: "Extract air sensor", 16: "Supply air sensor", 32: "Outdoor air sensor", 64: "Exhaust air sensor", 128: "Extra sensor", 256: "CO₂ sensor", 512: "Preheater", 1024: "Supply air below 5 °C" },
+    e_errors: "Fault sensor (bitmask or text)", e_fault: "Fault binary sensor",
     err_no_config: "Missing configuration",
     err_room: (i) => `rooms[${i}]: "entity" is required`,
     info_pause: "Paused – ventilation stopped. Do not leave the unit off for long.",
@@ -255,6 +263,27 @@ class AirobotVentCard extends HTMLElement {
     return { powerOn, boost, over, isAuto, sup: powerOn ? sup : 0, ex: powerOn ? ex : 0, hasMode: !!modeSt };
   }
 
+  _faults() {
+    const st = this._st("errors");
+    let mask = null;
+    if (st) {
+      if (st.attributes && st.attributes.bitimask !== undefined) mask = parseInt(st.attributes.bitimask, 10);
+      else if (/^\d+$/.test(st.state)) mask = parseInt(st.state, 10);
+    }
+    const out = [];
+    if (mask !== null && !isNaN(mask)) {
+      const names = tr(langOf(this._hass, this._config), "err_bits");
+      for (let b = 1; b <= mask && b < 2 ** 31; b *= 2) {
+        if (!(mask & b) || b === 2048) continue; // 2048 = filter (näidatakse eraldi)
+        out.push(names[b] || this._t("fault_unknown", b));
+      }
+    } else if (st && !["OK", "ok", "unknown", "unavailable", "", "none"].includes(st.state)) {
+      out.push(...st.state.split(",").map((x) => x.trim()).filter((x) => x && !/^filter$/i.test(x)));
+    }
+    if (!out.length && this._on("fault")) out.push(this._t("fault_title"));
+    return out;
+  }
+
   _info(s) {
     if (!s.powerOn) return this._t("info_pause");
     if (s.boost) return this._t("info_boost");
@@ -277,6 +306,7 @@ class AirobotVentCard extends HTMLElement {
 
     const c = this._config;
     const p = PALETTE[this._isDark() ? "dark" : "light"];
+    const faults = this._faults();
     const s = this._state();
     const flow = (l) => (!l || l <= 0) ? "animation-play-state:paused;opacity:0" : `animation-duration:${(6 / l).toFixed(2)}s`;
 
@@ -386,6 +416,9 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
 .title{font-size:17px;font-weight:600}
 .chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .chip{padding:4px 9px;border-radius:999px;background:${p.panel2};font-size:12px;color:${p.muted}}
+.fault{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:${p.faultBg};color:${p.faultText};text-align:left}
+.ftext{display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.3}
+.ftitle{font-size:15px;font-weight:600}
 .schem{position:relative;border-radius:14px;overflow:hidden;background:${p.schemBg}}
 .schem svg{display:block;width:100%;height:auto}
 .num{font-family:ui-monospace,"SF Mono","IBM Plex Mono",Menlo,monospace;font-variant-numeric:tabular-nums}
@@ -430,6 +463,11 @@ ha-card{container-type:inline-size}
     <div class="title">${esc(c.name || this._t("title"))}</div>
     <div class="chips">${chips.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</div>
   </div>
+
+  ${faults.length ? `<button class="fault" data-more="${esc(this._id("errors") || this._id("fault"))}">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>
+    <span class="ftext"><span class="ftitle">${esc(this._t("fault_title"))}</span><span>${faults.map(esc).join(" · ")}</span></span>
+  </button>` : ""}
 
   <div class="schem">
     <svg viewBox="0 0 440 256" role="img" aria-label="${this._t("schematic")}">
@@ -566,6 +604,7 @@ const EDITOR_GROUPS = [
   { key: "g_status", icon: "mdi:information-outline", fields: [
     ["preheater", ENT("binary_sensor")], ["preheater_power", ENT("sensor", { device_class: "power" })], ["bypass", ENT("binary_sensor")], ["filter_age", ENT("sensor")],
     ["filter_interval", ENT("sensor")], ["filter_alert", ENT("binary_sensor")],
+    ["errors", ENT("sensor")], ["fault", ENT("binary_sensor")],
   ] },
 ];
 const EKEY = (k) => "e__" + k;

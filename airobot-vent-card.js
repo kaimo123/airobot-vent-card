@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.9.0";
+const CARD_VERSION = "0.10.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -445,6 +445,14 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
 .munit{color:${p.muted}}
 .msub{font-size:10px;color:${p.muted};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:12px}
 ha-card{container-type:inline-size}
+.body{display:flex;flex-direction:column;gap:12px}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+@container (min-width:700px){
+  .body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+}
+@container (min-width:1200px){
+  .body{grid-template-columns:minmax(0,620px) minmax(0,1fr)}
+}
 @container (max-width:360px){.munit{display:none}.metric{padding:7px}.mval{font-size:17px}}
 .bar{display:block;height:3px;border-radius:2px;background:${p.line};overflow:hidden}
 .bar>span{display:block;height:3px;border-radius:2px}
@@ -464,6 +472,7 @@ ha-card{container-type:inline-size}
     <div class="chips">${chips.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</div>
   </div>
 
+  <div class="body"><div class="col">
   ${faults.length ? `<button class="fault" data-more="${esc(this._id("errors") || this._id("fault"))}">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>
     <span class="ftext"><span class="ftitle">${esc(this._t("fault_title"))}</span><span>${faults.map(esc).join(" · ")}</span></span>
@@ -507,6 +516,7 @@ ha-card{container-type:inline-size}
   </div>
 
   <div class="info">${esc(this._info(s))}</div>
+  </div><div class="col">
 
   ${s.hasMode ? `<div class="toggle">
     <button data-mode="auto" aria-pressed="${s.isAuto}" style="${tog(s.isAuto)}">${this._t("auto")}</button>
@@ -533,6 +543,7 @@ ha-card{container-type:inline-size}
   </div>` : ""}
 
   ${status.length ? `<div class="status">${status.map((x) => `<span>${esc(x)}</span>`).join("<span>·</span>")}</div>` : ""}
+  </div></div>
 </ha-card>`;
   }
 

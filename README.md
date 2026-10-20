@@ -22,6 +22,7 @@ A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L
 - **Air quality**: CO₂, humidity, VOC and PM2.5, each with its setpoint. The bar turns yellow at 85 % of the setpoint and red above it.
 - **Rooms**: CO₂ from room sensors, such as Airobot TE1 -AQ thermostats or DT1. This section is shown only when room sensors are configured.
 - **Status**: power consumption, days until filter change, preheater and bypass.
+- **Responsive**: on a wide card (over 700 px, e.g. `grid_options: columns: full` on a desktop) the schematic and the controls sit side by side, so the card does not grow taller as the screen gets wider.
 - **Light and dark theme**: `theme: auto` follows the Home Assistant theme.
 - **Estonian and English**: `language: auto` follows the Home Assistant language.
 - **Visual editor**: configure everything without YAML.

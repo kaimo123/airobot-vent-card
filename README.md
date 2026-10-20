@@ -17,7 +17,7 @@ A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L
 ## Features
 
 - **Animated schematic**: outdoor, supply, extract and exhaust air. Air moves through the ducts at the speed of each fan, so the supply and extract streams move independently. In overpressure mode the extract stream slows down, and when paused the movement stops.
-- **Layout like a classic ERV card**: a temperature above each duct; under the outdoor-side ducts the fan speed (rpm, or m³/h if per-stream airflow is configured), under the room-side ducts the fan level in % with a fan icon that spins at fan speed.
+- **Layout like a classic ERV card**: a temperature above each duct, with outdoor and room humidity next to the outdoor and extract labels; under the outdoor-side ducts the fan speed (rpm, or m³/h if per-stream airflow is configured), under the room-side ducts the fan level in % with a fan icon that spins at fan speed.
 - **Fault banner**: when the unit reports a fault, a red banner at the top names it (fire alarm, fan, sensor, preheater, supply below 5 °C, or an unknown bit), decoded from the fault bitmask (register 1026).
 - **Preheater**: when the electric preheater is on, a glowing heating coil appears on the outdoor-air duct together with its power (W / kW).
 - **Summer bypass**: when the bypass is open, the outdoor air is drawn around the heat exchanger along a separate BYPASS duct and the exchanger path fades out.
@@ -100,6 +100,7 @@ entities:                  # override only what differs from the defaults
   co2_setpoint: number.airobot_co2_seadepunkt
   humidity: sensor.airobot_valjatombe_niiskus
   humidity_setpoint: number.airobot_niiskuse_seadepunkt
+  outdoor_humidity: sensor.airobot_valisohu_niiskus
   voc: sensor.airobot_voc_indeks
   voc_setpoint: sensor.airobot_reg_voc_seadepunkt
   pm25: sensor.airobot_pm2_5

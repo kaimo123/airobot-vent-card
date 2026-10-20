@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.11.0";
+const CARD_VERSION = "0.12.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -30,6 +30,7 @@ const DEFAULTS = {
     co2: "sensor.airobot_co2",
     co2_setpoint: "number.airobot_co2_seadepunkt",
     humidity: "sensor.airobot_valjatombe_niiskus",
+    outdoor_humidity: "sensor.airobot_valisohu_niiskus",
     humidity_setpoint: "number.airobot_niiskuse_seadepunkt",
     voc: "sensor.airobot_voc_indeks",
     voc_setpoint: "sensor.airobot_reg_voc_seadepunkt",
@@ -123,7 +124,7 @@ const I18N = {
     e_airflow: "Õhuhulk (m³/h)", e_efficiency: "Soojustagastuse kasutegur (%)", e_moisture_recovery: "Niiskustagastus (%)", e_power: "Elektritarve (W)",
     e_mode: "Režiim (Auto / Käsitsi)", e_manual_level: "Käsitsi tase", e_boost: "Õhutus (boost)",
     e_overpressure: "Ülerõhk (kamin)", e_power_switch: "Toide (Paus)",
-    e_co2: "CO₂", e_co2_setpoint: "CO₂ seadepunkt", e_humidity: "Niiskus", e_humidity_setpoint: "Niiskuse seadepunkt",
+    e_co2: "CO₂", e_co2_setpoint: "CO₂ seadepunkt", e_humidity: "Niiskus (toaõhk)", e_outdoor_humidity: "Välisõhu niiskus", e_humidity_setpoint: "Niiskuse seadepunkt",
     e_voc: "VOC indeks", e_voc_setpoint: "VOC seadepunkt", e_pm25: "PM2.5", e_pm25_setpoint: "PM2.5 seadepunkt",
     e_preheater: "Eelsoojendi sees", e_preheater_power: "Eelsoojendi võimsus (W)", e_bypass: "Bypass avatud", e_filter_age: "Filtri vanus (h)",
     e_filter_interval: "Filtri vahetusintervall (h)", e_filter_alert: "Filtri vahetuse hoiatus",
@@ -171,7 +172,7 @@ const I18N = {
     e_airflow: "Airflow (m³/h)", e_efficiency: "Heat recovery efficiency (%)", e_moisture_recovery: "Moisture recovery (%)", e_power: "Power consumption (W)",
     e_mode: "Mode (Auto / Manual)", e_manual_level: "Manual level", e_boost: "Boost",
     e_overpressure: "Overpressure (fireplace)", e_power_switch: "Power (Pause)",
-    e_co2: "CO₂", e_co2_setpoint: "CO₂ setpoint", e_humidity: "Humidity", e_humidity_setpoint: "Humidity setpoint",
+    e_co2: "CO₂", e_co2_setpoint: "CO₂ setpoint", e_humidity: "Humidity (room)", e_outdoor_humidity: "Outdoor humidity", e_humidity_setpoint: "Humidity setpoint",
     e_voc: "VOC index", e_voc_setpoint: "VOC setpoint", e_pm25: "PM2.5", e_pm25_setpoint: "PM2.5 setpoint",
     e_preheater: "Preheater on", e_preheater_power: "Preheater power (W)", e_bypass: "Bypass open", e_filter_age: "Filter age (h)",
     e_filter_interval: "Filter replacement interval (h)", e_filter_alert: "Filter replacement alert",
@@ -312,8 +313,8 @@ class AirobotVentCard extends HTMLElement {
 
     const t = (k) => this._fmt(this._num(k), 1) + "°";
     const moist = this._num("moisture_recovery");
-    const tempTxt = (key, label, x, y, anchor, col) => this._id(key) ? `<g data-more="${esc(this._id(key))}" style="cursor:pointer">
-        <text x="${x}" y="${y - 24}" font-size="11" fill="${col}" text-anchor="${anchor}">${this._t(label)}</text>
+    const tempTxt = (key, label, x, y, anchor, col, rhKey) => this._id(key) ? `<g data-more="${esc(this._id(key))}" style="cursor:pointer">
+        <text x="${x}" y="${y - 24}" font-size="11" fill="${col}" text-anchor="${anchor}">${this._t(label)}${rhKey && this._has(rhKey) ? ` · RH ${esc(this._fmt(this._num(rhKey), 0))}%` : ""}</text>
         <text class="num" x="${x}" y="${y}" font-size="22" fill="${p.text}" text-anchor="${anchor}">${t(key)}</text></g>` : "";
     const GAUGE = "M12,16A3,3 0 0,1 9,13C9,11.88 9.61,10.9 10.5,10.39L20.21,4.77L14.68,14.35C14.18,15.33 13.17,16 12,16M12,3C13.81,3 15.5,3.5 16.97,4.32L14.87,5.53C14,5.19 13,5 12,5A8,8 0 0,0 4,13C4,15.21 4.89,17.21 6.34,18.65H6.35C6.74,19.04 6.74,19.67 6.35,20.06C5.96,20.45 5.32,20.45 4.93,20.07V20.07C3.12,18.26 2,15.76 2,13A10,10 0 0,1 12,3M22,13C22,15.76 20.88,18.26 19.07,20.07V20.07C18.68,20.45 18.05,20.45 17.66,20.06C17.27,19.67 17.27,19.04 17.66,18.65V18.65C19.11,17.2 20,15.21 20,13C20,12 19.81,11 19.46,10.1L20.67,8C21.5,9.5 22,11.18 22,13Z";
     const FAN = "M12,11A1,1 0 0,0 11,12A1,1 0 0,0 12,13A1,1 0 0,0 13,12A1,1 0 0,0 12,11M12.5,2C17,2 17.11,5.57 14.75,6.75C13.76,7.24 13.32,8.29 13.13,9.22C13.61,9.42 14.03,9.73 14.35,10.13C18.05,8.13 22.03,8.92 22.03,12.5C22.03,17 18.46,17.1 17.28,14.73C16.78,13.74 15.72,13.3 14.79,13.11C14.59,13.59 14.28,14 13.88,14.34C15.87,18.03 15.08,22 11.5,22C7,22 6.91,18.42 9.27,17.24C10.25,16.75 10.69,15.71 10.89,14.79C10.4,14.59 9.97,14.27 9.65,13.87C5.96,15.85 2,15.07 2,11.5C2,7 5.56,6.89 6.74,9.26C7.24,10.25 8.29,10.68 9.22,10.87C9.41,10.39 9.73,9.97 10.14,9.65C8.15,5.96 8.94,2 12.5,2Z";
@@ -496,10 +497,10 @@ ha-card{container-type:inline-size}
       <path class="flow" d="${bypassOn ? BYPASS : SUPPLY}" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.sup)}"/>
       <path class="flow" d="M436 88 H290 L150 206 H4" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.ex)}"/>
 
-      ${tempTxt("outdoor_temp", "outdoor", 14, 68, "start", p.coldText)}
+      ${tempTxt("outdoor_temp", "outdoor", 14, 68, "start", p.coldText, "outdoor_humidity")}
       ${heater()}
       ${tempTxt("exhaust_temp", "exhaust", 14, 186, "start", p.coldText)}
-      ${tempTxt("extract_temp", "extract", 426, 68, "end", p.warmText)}
+      ${tempTxt("extract_temp", "extract", 426, 68, "end", p.warmText, "humidity")}
       ${tempTxt("supply_temp", "supply", 426, 186, "end", p.warmText)}
 
       ${rpmTxt("supply_rpm", "supply_airflow", 14, 122)}
@@ -610,7 +611,7 @@ const EDITOR_GROUPS = [
   ] },
   { key: "g_air", icon: "mdi:air-filter", fields: [
     ["co2", ENT("sensor")], ["co2_setpoint", ENT(["number", "sensor", "input_number"])],
-    ["humidity", ENT("sensor")], ["humidity_setpoint", ENT(["number", "sensor", "input_number"])],
+    ["humidity", ENT("sensor")], ["outdoor_humidity", ENT("sensor")], ["humidity_setpoint", ENT(["number", "sensor", "input_number"])],
     ["voc", ENT("sensor")], ["voc_setpoint", ENT(["number", "sensor", "input_number"])],
     ["pm25", ENT("sensor")], ["pm25_setpoint", ENT(["number", "sensor", "input_number"])],
   ] },

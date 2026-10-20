@@ -17,7 +17,7 @@ Home Assistanti Lovelace kaart Airoboti soojustagastusega ventilatsiooniseadmete
 ## Mida kaart näitab
 
 - **Skeem:** välisõhk, sissepuhe, väljatõmme ja heitõhk. Kanalites liigub õhk ventilaatori taseme kiirusega, kumbki vool oma kiirusega. Ülerõhu ajal on väljatõmme aeglasem ja pausi ajal liikumine peatub.
-- **Paigutus nagu klassikalisel ERV-kaardil:** iga kanali kohal on temperatuur. Välispoolsete kanalite all on ventilaatori pöörded (p/min, või m³/h, kui voolu õhuhulk on seadistatud). Toapoolsete kanalite all on tase protsentides ja ventilaatori ikoon, mis pöörleb ventilaatori kiirusega.
+- **Paigutus nagu klassikalisel ERV-kaardil:** iga kanali kohal on temperatuur; välisõhu ja väljatõmbe juures ka õue ja toa õhuniiskus. Välispoolsete kanalite all on ventilaatori pöörded (p/min, või m³/h, kui voolu õhuhulk on seadistatud). Toapoolsete kanalite all on tase protsentides ja ventilaatori ikoon, mis pöörleb ventilaatori kiirusega.
 - **Rikke riba:** kui seade annab rikke, ilmub kaardi ülaossa punane riba vea nimega (tulekahjusignaal, ventilaator, andur, eelsoojendi, sissepuhe alla 5 °C või tundmatu bitt). Vead loetakse rikete bitimaskist (register 1026).
 - **Eelsoojendi:** kui elektriline eelsoojendi töötab, ilmub välisõhu kanalile helendav küttespiraal koos võimsusega (W / kW).
 - **Suvine bypass:** kui bypass on avatud, liigub välisõhk mööda eraldi BYPASS-kanalit soojusvahetist mööda ja soojusvaheti tee jääb tuhmiks.
@@ -94,6 +94,7 @@ entities:                # muuda ainult neid, mis erinevad vaikimisi nimedest
   co2_setpoint: number.airobot_co2_seadepunkt
   humidity: sensor.airobot_valjatombe_niiskus
   humidity_setpoint: number.airobot_niiskuse_seadepunkt
+  outdoor_humidity: sensor.airobot_valisohu_niiskus
   voc: sensor.airobot_voc_indeks
   voc_setpoint: sensor.airobot_reg_voc_seadepunkt
   pm25: sensor.airobot_pm2_5

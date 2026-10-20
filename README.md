@@ -10,6 +10,7 @@ A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L
 
 - **Animated schematic**: outdoor, supply, extract and exhaust air. Air moves through the ducts at the speed of each fan, so the supply and extract streams move independently. In overpressure mode the extract stream slows down, and when paused the movement stops.
 - **Layout like a classic ERV card**: a temperature above each duct; under the outdoor-side ducts the fan speed (rpm, or m³/h if per-stream airflow is configured), under the room-side ducts the fan level in % with a fan icon that spins at fan speed.
+- **Preheater**: when the electric preheater is on, a glowing heating coil appears on the outdoor-air duct together with its power (W / kW).
 - **Centre**: heat recovery efficiency and moisture recovery. Total airflow is shown at the top.
 - **Mode**: Auto or Manual. The level stepper (+/−) is shown only in Manual mode.
 - **Actions**: Overpressure (fireplace), Boost and Pause.
@@ -98,6 +99,7 @@ entities:                  # override only what differs from the defaults
   overpressure: switch.airobot_ulerohk
   power_switch: switch.airobot_toide
   preheater: binary_sensor.airobot_eelsoojendi_sees
+  preheater_power: sensor.airobot_eelsoojendi_voimsus   # optional
   bypass: binary_sensor.airobot_bypass_avatud
   filter_age: sensor.airobot_filtri_vanus
   filter_interval: sensor.airobot_filtri_intervall

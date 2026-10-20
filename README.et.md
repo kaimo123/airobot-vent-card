@@ -10,6 +10,7 @@ Home Assistanti Lovelace kaart Airoboti soojustagastusega ventilatsiooniseadmete
 
 - **Skeem:** välisõhk, sissepuhe, väljatõmme ja heitõhk. Kanalites liigub õhk ventilaatori taseme kiirusega, kumbki vool oma kiirusega. Ülerõhu ajal on väljatõmme aeglasem ja pausi ajal liikumine peatub.
 - **Paigutus nagu klassikalisel ERV-kaardil:** iga kanali kohal on temperatuur. Välispoolsete kanalite all on ventilaatori pöörded (p/min, või m³/h, kui voolu õhuhulk on seadistatud). Toapoolsete kanalite all on tase protsentides ja ventilaatori ikoon, mis pöörleb ventilaatori kiirusega.
+- **Eelsoojendi:** kui elektriline eelsoojendi töötab, ilmub välisõhu kanalile helendav küttespiraal koos võimsusega (W / kW).
 - **Keskel:** soojustagastuse kasutegur ja niiskustagastus. Kogu õhuhulk on üleval keskel.
 - **Režiim:** Auto ja Käsitsi. Taseme valik (+/−) on nähtaval ainult käsitsi režiimis.
 - **Toimingud:** Ülerõhk (kamin), Õhutus (boost) ja Paus.
@@ -92,6 +93,7 @@ entities:                # muuda ainult neid, mis erinevad vaikimisi nimedest
   overpressure: switch.airobot_ulerohk
   power_switch: switch.airobot_toide
   preheater: binary_sensor.airobot_eelsoojendi_sees
+  preheater_power: sensor.airobot_eelsoojendi_voimsus   # valikuline
   bypass: binary_sensor.airobot_bypass_avatud
   filter_age: sensor.airobot_filtri_vanus
   filter_interval: sensor.airobot_filtri_intervall

@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.6.0";
+const CARD_VERSION = "0.7.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -41,6 +41,7 @@ const DEFAULTS = {
     overpressure: "switch.airobot_ulerohk",
     power_switch: "switch.airobot_toide",
     preheater: "binary_sensor.airobot_eelsoojendi_sees",
+    preheater_power: "sensor.airobot_eelsoojendi_voimsus",
     bypass: "binary_sensor.airobot_bypass_avatud",
     filter_age: "sensor.airobot_filtri_vanus",
     filter_interval: "sensor.airobot_filtri_intervall",
@@ -56,7 +57,7 @@ const PALETTE = {
     schemBg: "#F6F7F9", coldBg: "#E9F0F8", warmBg: "#FBEEE6", hub: "#FFFFFF", hubLine: "#D5DAE0",
     toggleBg: "#B8F5A8", toggleOn: "#1B1F24", toggleOnText: "#FFFFFF", toggleOffText: "#2D5A27",
     actOn: "#1B1F24", actOnText: "#FFFFFF", actOff: "#EEF1F4", actOffText: "#1B1F24",
-    good: "#2E7D4F", warn: "#B26A00", bad: "#B3261E", badge: "#EEF1F4",
+    good: "#2E7D4F", warn: "#B26A00", bad: "#B3261E", badge: "#EEF1F4", heat: "#D93A12",
   },
   dark: {
     bg: "#212428", panel: "#2A2E33", panel2: "#2E3237", line: "#33373D", text: "#ECEEF0", muted: "#9AA3AD",
@@ -64,7 +65,7 @@ const PALETTE = {
     schemBg: "#1A1C1F", coldBg: "#1A1C1F", warmBg: "#1A1C1F", hub: "#2E3237", hubLine: "#3A3F46",
     toggleBg: "#B8F5A8", toggleOn: "#17191C", toggleOnText: "#ECEEF0", toggleOffText: "#2D5A27",
     actOn: "#ECEEF0", actOnText: "#17191C", actOff: "#17191C", actOffText: "#ECEEF0",
-    good: "#8FD97C", warn: "#F2C14E", bad: "#FF8A80", badge: "#17191C",
+    good: "#8FD97C", warn: "#F2C14E", bad: "#FF8A80", badge: "#17191C", heat: "#FF7A45",
   },
 };
 
@@ -89,7 +90,7 @@ const I18N = {
     info_ok: "Õhk on puhas – Airobot hoiab madalat taset",
     filter_replace: "Filter: vaheta!",
     filter_days: (d) => `Filter ${d} p`,
-    preheater_on: "Eelsoojendi sees", preheater_off: "Eelsoojendi väljas",
+    preheater_on: "Eelsoojendi sees", preheater_short: "eelsoojendi", preheater_off: "Eelsoojendi väljas",
     bypass_on: "Bypass avatud", bypass_off: "Bypass suletud",
     outside: "VÄLJAS", inside: "TOAS",
     outdoor: "Välisõhk", exhaust: "Heitõhk", extract: "Väljatõmme", supply: "Sissepuhe",
@@ -119,7 +120,7 @@ const I18N = {
     e_overpressure: "Ülerõhk (kamin)", e_power_switch: "Toide (Paus)",
     e_co2: "CO₂", e_co2_setpoint: "CO₂ seadepunkt", e_humidity: "Niiskus", e_humidity_setpoint: "Niiskuse seadepunkt",
     e_voc: "VOC indeks", e_voc_setpoint: "VOC seadepunkt", e_pm25: "PM2.5", e_pm25_setpoint: "PM2.5 seadepunkt",
-    e_preheater: "Eelsoojendi sees", e_bypass: "Bypass avatud", e_filter_age: "Filtri vanus (h)",
+    e_preheater: "Eelsoojendi sees", e_preheater_power: "Eelsoojendi võimsus (W)", e_bypass: "Bypass avatud", e_filter_age: "Filtri vanus (h)",
     e_filter_interval: "Filtri vahetusintervall (h)", e_filter_alert: "Filtri vahetuse hoiatus",
   },
   en: {
@@ -135,7 +136,7 @@ const I18N = {
     info_ok: "Air is clean – Airobot keeps a low level",
     filter_replace: "Filter: replace!",
     filter_days: (d) => `Filter ${d} d`,
-    preheater_on: "Preheater on", preheater_off: "Preheater off",
+    preheater_on: "Preheater on", preheater_short: "preheater", preheater_off: "Preheater off",
     bypass_on: "Bypass open", bypass_off: "Bypass closed",
     outside: "OUTSIDE", inside: "INSIDE",
     outdoor: "Outdoor", exhaust: "Exhaust", extract: "Extract", supply: "Supply",
@@ -164,7 +165,7 @@ const I18N = {
     e_overpressure: "Overpressure (fireplace)", e_power_switch: "Power (Pause)",
     e_co2: "CO₂", e_co2_setpoint: "CO₂ setpoint", e_humidity: "Humidity", e_humidity_setpoint: "Humidity setpoint",
     e_voc: "VOC index", e_voc_setpoint: "VOC setpoint", e_pm25: "PM2.5", e_pm25_setpoint: "PM2.5 setpoint",
-    e_preheater: "Preheater on", e_bypass: "Bypass open", e_filter_age: "Filter age (h)",
+    e_preheater: "Preheater on", e_preheater_power: "Preheater power (W)", e_bypass: "Bypass open", e_filter_age: "Filter age (h)",
     e_filter_interval: "Filter replacement interval (h)", e_filter_alert: "Filter replacement alert",
   },
 };
@@ -295,6 +296,19 @@ class AirobotVentCard extends HTMLElement {
         <g transform="translate(${x} ${y - 14}) scale(0.75)"><path d="${GAUGE}" fill="${p.text}"/></g>
         <text class="num" x="${x + 24}" y="${y}" font-size="15" fill="${p.text}">${v === null ? "–" : esc(this._fmt(v, 0))} ${useFlow ? "m³/h" : this._t("rpm")}</text></g>`;
     };
+    const prePow = this._num("preheater_power");
+    const preOn = s.powerOn && (this._on("preheater") || (prePow !== null && prePow > 20));
+    const heater = () => {
+      if (!preOn) return "";
+      const pw = prePow === null ? "" : prePow >= 1000 ? `${this._fmt(prePow / 1000, 1)} kW` : `${this._fmt(prePow, 0)} W`;
+      const more = this._id("preheater_power") && this._st("preheater_power") ? "preheater_power" : "preheater";
+      return `<g data-more="${esc(this._id(more))}" style="cursor:pointer">
+        <rect class="glow" x="94" y="74" width="48" height="28" rx="6" fill="${p.heat}"/>
+        <path d="M99 88 l4 -8 l4 16 l4 -16 l4 16 l4 -16 l4 16 l4 -16 l4 16 l4 -16 l3 8" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+        <text x="118" y="70" font-size="10" fill="${p.heat}" text-anchor="middle">${this._t("preheater_short")}</text>
+        ${pw ? `<text class="num" x="118" y="58" font-size="13" font-weight="600" fill="${p.heat}" text-anchor="middle">${esc(pw)}</text>` : ""}
+      </g>`;
+    };
     const pctTxt = (lvl, key, x, y) => {
       if (lvl === null || lvl === undefined) return "";
       const spin = lvl > 0 ? `animation-duration:${(4 / lvl).toFixed(2)}s` : "animation-play-state:paused";
@@ -376,7 +390,9 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
 @keyframes airflow{to{stroke-dashoffset:-24}}
 .spin{transform-box:fill-box;transform-origin:center;animation:spin linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.flow,.spin{animation:none}}
+.glow{animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{opacity:.6}}
+@media (prefers-reduced-motion:reduce){.flow,.spin,.glow{animation:none}}
 .info{text-align:center;font-size:14px;color:${p.muted}}
 .toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:${p.toggleBg}}
 .toggle button{height:44px;border-radius:10px;text-align:center;font-size:15px}
@@ -426,6 +442,7 @@ ha-card{container-type:inline-size}
       <path class="flow" d="M436 88 H290 L150 206 H4" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.ex)}"/>
 
       ${tempTxt("outdoor_temp", "outdoor", 14, 68, "start", p.coldText)}
+      ${heater()}
       ${tempTxt("exhaust_temp", "exhaust", 14, 186, "start", p.coldText)}
       ${tempTxt("extract_temp", "extract", 426, 68, "end", p.warmText)}
       ${tempTxt("supply_temp", "supply", 426, 186, "end", p.warmText)}
@@ -541,7 +558,7 @@ const EDITOR_GROUPS = [
     ["pm25", ENT("sensor")], ["pm25_setpoint", ENT(["number", "sensor", "input_number"])],
   ] },
   { key: "g_status", icon: "mdi:information-outline", fields: [
-    ["preheater", ENT("binary_sensor")], ["bypass", ENT("binary_sensor")], ["filter_age", ENT("sensor")],
+    ["preheater", ENT("binary_sensor")], ["preheater_power", ENT("sensor", { device_class: "power" })], ["bypass", ENT("binary_sensor")], ["filter_age", ENT("sensor")],
     ["filter_interval", ENT("sensor")], ["filter_alert", ENT("binary_sensor")],
   ] },
 ];

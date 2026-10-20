@@ -6,10 +6,10 @@ A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L
 
 | Normal operation | Winter: preheater on | Summer: bypass open |
 |:---:|:---:|:---:|
-| <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-normal.png" width="280" alt="Normal operation, dark theme, with room CO₂ sensors"> | <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-preheater.png" width="280" alt="Preheater heating the outdoor air, light theme"> | <img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-bypass.png" width="280" alt="Summer bypass open, manual mode, Estonian"> |
+| ![Normal operation, dark theme, with room CO₂ sensors](https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-normal.png) | ![Preheater heating the outdoor air, light theme](https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-preheater.png) | ![Summer bypass open, manual mode, Estonian](https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-bypass.png) |
 | Dark theme, Auto mode, room CO₂ sensors | Light theme, heating coil with its power on the outdoor duct | Bypass duct around the exchanger, Manual mode with level stepper, Estonian |
 
-<img src="https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-wide.png" width="860" alt="Wide card (desktop): schematic and controls side by side">
+![Wide card (desktop): schematic and controls side by side](https://raw.githubusercontent.com/kaimo123/airobot-vent-card/main/screenshot-wide.png)
 
 *Wide card (desktop): schematic and controls side by side*
 

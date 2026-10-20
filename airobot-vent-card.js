@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.10.0";
+const CARD_VERSION = "0.11.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -391,13 +391,15 @@ class AirobotVentCard extends HTMLElement {
     // --- olekud
     const chips = [];
     if (power !== null) chips.push(`${this._fmt(power, 0)} W`);
-    if (this._has("filter_age")) {
-      const left = ((this._num("filter_interval") ?? 4320) - this._num("filter_age")) / 24;
-      chips.push(this._on("filter_alert") ? this._t("filter_replace") : this._t("filter_days", this._fmt(Math.max(0, left), 0)));
-    }
     const status = [];
     if (this._st("preheater")) status.push(this._t(this._on("preheater") ? "preheater_on" : "preheater_off"));
     if (this._st("bypass")) status.push(this._t(this._on("bypass") ? "bypass_on" : "bypass_off"));
+    let filterWarn = false;
+    if (this._has("filter_age")) {
+      const left = ((this._num("filter_interval") ?? 4320) - this._num("filter_age")) / 24;
+      filterWarn = this._on("filter_alert");
+      status.push(filterWarn ? this._t("filter_replace") : this._t("filter_days", this._fmt(Math.max(0, left), 0)));
+    }
 
     const lvl = this._num("manual_level");
     const segs = Array.from({ length: 10 }, (_, i) => `<span class="seg" style="background:${lvl !== null && i < lvl ? p.cold : p.line}"></span>`).join("");
@@ -542,7 +544,7 @@ ha-card{container-type:inline-size}
     ${rooms}
   </div>` : ""}
 
-  ${status.length ? `<div class="status">${status.map((x) => `<span>${esc(x)}</span>`).join("<span>·</span>")}</div>` : ""}
+  ${status.length ? `<div class="status">${status.map((x) => `<span${filterWarn && x === this._t("filter_replace") ? ` style="color:${p.bad};font-weight:600"` : ""}>${esc(x)}</span>`).join("<span>·</span>")}</div>` : ""}
   </div></div>
 </ha-card>`;
   }

@@ -26,7 +26,7 @@ Home Assistanti Lovelace kaart Airoboti soojustagastusega ventilatsiooniseadmete
 - **Toimingud:** Ülerõhk (kamin), Õhutus (boost) ja Paus.
 - **Õhukvaliteet:** CO₂, niiskus, VOC ja PM2.5 koos seadepunktiga. Riba muutub kollaseks 85 % juures ja punaseks üle seadepunkti. Näidatakse ainult neid näite, mille olem on olemas.
 - **Toad:** toaandurite CO₂. Plokk on nähtav ainult siis, kui oled seadistuses lisanud `rooms` ja vastavad olemid on olemas.
-- **Olekud:** elektritarve, filtri päevad, eelsoojendi ja bypass.
+- **Olekud:** elektritarve päises; eelsoojendi, bypass ja filtri vahetuseni jäänud päevad kaardi all (punaselt, kui filtrid tuleb vahetada).
 - **Kohandub ekraani laiusega:** laial kaardil (üle 700 px, näiteks `grid_options: columns: full` arvutis) on skeem ja juhtnupud kõrvuti, nii et kaart ei veni laiemal ekraanil pikemaks.
 - **Hele ja tume teema:** `theme: auto` järgib HA teemat.
 - **Keel:** eesti ja inglise. `language: auto` järgib HA keelt.

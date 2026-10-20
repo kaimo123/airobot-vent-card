@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.7.0";
+const CARD_VERSION = "0.8.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -90,7 +90,7 @@ const I18N = {
     info_ok: "Õhk on puhas – Airobot hoiab madalat taset",
     filter_replace: "Filter: vaheta!",
     filter_days: (d) => `Filter ${d} p`,
-    preheater_on: "Eelsoojendi sees", preheater_short: "eelsoojendi", preheater_off: "Eelsoojendi väljas",
+    preheater_on: "Eelsoojendi sees", preheater_short: "eelsoojendi", bypass_short: "bypass", preheater_off: "Eelsoojendi väljas",
     bypass_on: "Bypass avatud", bypass_off: "Bypass suletud",
     outside: "VÄLJAS", inside: "TOAS",
     outdoor: "Välisõhk", exhaust: "Heitõhk", extract: "Väljatõmme", supply: "Sissepuhe",
@@ -136,7 +136,7 @@ const I18N = {
     info_ok: "Air is clean – Airobot keeps a low level",
     filter_replace: "Filter: replace!",
     filter_days: (d) => `Filter ${d} d`,
-    preheater_on: "Preheater on", preheater_short: "preheater", preheater_off: "Preheater off",
+    preheater_on: "Preheater on", preheater_short: "preheater", bypass_short: "bypass", preheater_off: "Preheater off",
     bypass_on: "Bypass open", bypass_off: "Bypass closed",
     outside: "OUTSIDE", inside: "INSIDE",
     outdoor: "Outdoor", exhaust: "Exhaust", extract: "Extract", supply: "Supply",
@@ -309,6 +309,9 @@ class AirobotVentCard extends HTMLElement {
         ${pw ? `<text class="num" x="118" y="58" font-size="13" font-weight="600" fill="${p.heat}" text-anchor="middle">${esc(pw)}</text>` : ""}
       </g>`;
     };
+    const bypassOn = this._on("bypass");
+    const BYPASS = "M4 88 H150 Q165 88 165 103 V219 Q165 230 176 230 H285 Q296 230 296 219 V206 H436";
+    const SUPPLY = "M4 88 H150 L290 206 H436";
     const pctTxt = (lvl, key, x, y) => {
       if (lvl === null || lvl === undefined) return "";
       const spin = lvl > 0 ? `animation-duration:${(4 / lvl).toFixed(2)}s` : "animation-play-state:paused";
@@ -436,9 +439,12 @@ ha-card{container-type:inline-size}
       <text x="426" y="20" font-size="10" font-weight="600" letter-spacing="1" fill="${p.warmText}" text-anchor="end">${this._t("inside")}</text>
       ${airflow !== null && s.powerOn ? `<text class="num" x="220" y="20" font-size="11" fill="${p.muted}" text-anchor="middle" data-more="${esc(this._id("airflow"))}" style="cursor:pointer">${esc(this._fmt(airflow, 0))} m³/h</text>` : ""}
 
-      <path d="M4 88 H150 L290 206 H436" stroke="${p.cold}" stroke-width="16" stroke-linejoin="round" fill="none" opacity=".9"/>
+      <path d="${SUPPLY}" stroke="${p.cold}" stroke-width="16" stroke-linejoin="round" fill="none" opacity="${bypassOn ? ".2" : ".9"}"/>
       <path d="M436 88 H290 L150 206 H4" stroke="${p.warm}" stroke-width="16" stroke-linejoin="round" fill="none" opacity=".9"/>
-      <path class="flow" d="M4 88 H150 L290 206 H436" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.sup)}"/>
+      ${bypassOn ? `<g data-more="${esc(this._id("bypass"))}" style="cursor:pointer">
+        <path d="${BYPASS}" stroke="${p.cold}" stroke-width="12" stroke-linejoin="round" fill="none" opacity=".95"/>
+        <text x="230" y="223" font-size="10" font-weight="600" letter-spacing="1" fill="${p.coldText}" text-anchor="middle">${this._t("bypass_short").toUpperCase()}</text></g>` : ""}
+      <path class="flow" d="${bypassOn ? BYPASS : SUPPLY}" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.sup)}"/>
       <path class="flow" d="M436 88 H290 L150 206 H4" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.ex)}"/>
 
       ${tempTxt("outdoor_temp", "outdoor", 14, 68, "start", p.coldText)}

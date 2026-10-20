@@ -303,10 +303,10 @@ class AirobotVentCard extends HTMLElement {
       const pw = prePow === null ? "" : prePow >= 1000 ? `${this._fmt(prePow / 1000, 1)} kW` : `${this._fmt(prePow, 0)} W`;
       const more = this._id("preheater_power") && this._st("preheater_power") ? "preheater_power" : "preheater";
       return `<g data-more="${esc(this._id(more))}" style="cursor:pointer">
-        <rect class="glow" x="94" y="74" width="48" height="28" rx="6" fill="${p.heat}"/>
-        <path d="M99 88 l4 -8 l4 16 l4 -16 l4 16 l4 -16 l4 16 l4 -16 l4 16 l4 -16 l3 8" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
-        <text x="118" y="70" font-size="10" fill="${p.heat}" text-anchor="middle">${this._t("preheater_short")}</text>
-        ${pw ? `<text class="num" x="118" y="58" font-size="13" font-weight="600" fill="${p.heat}" text-anchor="middle">${esc(pw)}</text>` : ""}
+        <rect class="glow" x="104" y="74" width="44" height="28" rx="6" fill="${p.heat}"/>
+        <path d="M108 88 l4 -8 l4 16 l4 -16 l4 16 l4 -16 l4 16 l4 -16 l4 16 l3 -8" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+        <text x="126" y="70" font-size="10" fill="${p.heat}" text-anchor="middle">${this._t("preheater_short")}</text>
+        ${pw ? `<text class="num" x="126" y="57" font-size="13" font-weight="600" fill="${p.heat}" text-anchor="middle">${esc(pw)}</text>` : ""}
       </g>`;
     };
     const bypassOn = this._on("bypass");

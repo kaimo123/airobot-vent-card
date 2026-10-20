@@ -4,7 +4,10 @@
 
 Home Assistanti Lovelace kaart Airoboti soojustagastusega ventilatsiooniseadmetele (L, L5, S1, S2, V3, V4, V6, V8), mis on ühendatud Modbus TCP kaudu.
 
-![Kaart tumedas ja heledas teemas](screenshot.png)
+| Tavaline töö | Talv: eelsoojendi sees | Suvi: bypass avatud |
+|:---:|:---:|:---:|
+| <img src="screenshot-normal.png" width="280" alt="Tavaline töö, tume teema, toaanduritega"> | <img src="screenshot-preheater.png" width="280" alt="Eelsoojendi soojendab välisõhku, hele teema"> | <img src="screenshot-bypass.png" width="280" alt="Suvine bypass avatud, käsitsi režiim"> |
+| Tume teema, Auto režiim, toaandurite CO₂ | Hele teema, küttespiraal ja võimsus välisõhu kanalil | Bypass-kanal soojusvahetist mööda, käsitsi režiim taseme valikuga |
 
 ## Mida kaart näitab
 

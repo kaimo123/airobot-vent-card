@@ -4,7 +4,10 @@
 
 A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L5, S1, S2, V3, V4, V6, V8) connected over Modbus TCP.
 
-![The card in dark and light theme, Estonian and English](screenshot.png)
+| Normal operation | Winter: preheater on | Summer: bypass open |
+|:---:|:---:|:---:|
+| <img src="screenshot-normal.png" width="280" alt="Normal operation, dark theme, with room CO₂ sensors"> | <img src="screenshot-preheater.png" width="280" alt="Preheater heating the outdoor air, light theme"> | <img src="screenshot-bypass.png" width="280" alt="Summer bypass open, manual mode, Estonian"> |
+| Dark theme, Auto mode, room CO₂ sensors | Light theme, heating coil with its power on the outdoor duct | Bypass duct around the exchanger, Manual mode with level stepper, Estonian |
 
 ## Features
 

@@ -9,8 +9,8 @@ A Home Assistant Lovelace card for Airobot heat recovery ventilation units (L, L
 ## Features
 
 - **Animated schematic**: outdoor, supply, extract and exhaust air. Air moves through the ducts at the speed of each fan, so the supply and extract streams move independently. In overpressure mode the extract stream slows down, and when paused the movement stops.
-- **Per-stream speed**: a label on the supply and the extract stream shows the fan level and its airflow (m³/h) or fan speed (rpm).
-- **Fan level, airflow and heat recovery efficiency** in the centre of the schematic.
+- **Layout like a classic ERV card**: a temperature above each duct; under the outdoor-side ducts the fan speed (rpm, or m³/h if per-stream airflow is configured), under the room-side ducts the fan level in % with a fan icon that spins at fan speed.
+- **Centre**: heat recovery efficiency and moisture recovery. Total airflow is shown at the top.
 - **Mode**: Auto or Manual. The level stepper (+/−) is shown only in Manual mode.
 - **Actions**: Overpressure (fireplace), Boost and Pause.
 - **Air quality**: CO₂, humidity, VOC and PM2.5, each with its setpoint. The bar turns yellow at 85 % of the setpoint and red above it.
@@ -82,6 +82,7 @@ entities:                  # override only what differs from the defaults
   exhaust_airflow: null
   airflow: sensor.airobot_ohuhulk
   efficiency: sensor.airobot_seadme_kasutegur
+  moisture_recovery: sensor.airobot_niiskustagastus
   power: sensor.konkukilp_ventilatsioon_power
   co2: sensor.airobot_co2
   co2_setpoint: number.airobot_co2_seadepunkt

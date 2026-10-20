@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.4.0";
+const CARD_VERSION = "0.5.0";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -25,6 +25,7 @@ const DEFAULTS = {
     exhaust_airflow: null,
     airflow: "sensor.airobot_ohuhulk",
     efficiency: "sensor.airobot_seadme_kasutegur",
+    moisture_recovery: "sensor.airobot_niiskustagastus",
     power: "sensor.konkukilp_ventilatsioon_power",
     co2: "sensor.airobot_co2",
     co2_setpoint: "number.airobot_co2_seadepunkt",
@@ -96,7 +97,7 @@ const I18N = {
     auto: "Auto", manual: "Käsitsi",
     overpressure: "Ülerõhk", boost: "Õhutus", pause: "Paus",
     dec: "Vähenda taset", inc: "Suurenda taset", level_aria: (l) => `Tase ${l} / 10`,
-    rooms: "Toad", humidity_short: "RH", rpm: "p/min",
+    rooms: "Toad", humidity_short: "RH", rpm: "p/min", heat: "soojus", moisture: "niiskus", recovery: "tagastus",
     // redaktor
     g_rooms: "Toad (toaandurite CO₂)", g_temps: "Temperatuurid", g_fans: "Ventilaatorid ja energia",
     g_control: "Juhtimine", g_air: "Õhukvaliteet", g_status: "Olekud ja filter", g_advanced: "Täpsemalt",
@@ -113,7 +114,7 @@ const I18N = {
     e_supply_level: "Sissepuhke ventilaatori tase (0–10)", e_exhaust_level: "Väljatõmbe ventilaatori tase (0–10)",
     e_supply_rpm: "Sissepuhke ventilaatori pöörded", e_exhaust_rpm: "Väljatõmbe ventilaatori pöörded",
     e_supply_airflow: "Sissepuhke õhuhulk (m³/h)", e_exhaust_airflow: "Väljatõmbe õhuhulk (m³/h)",
-    e_airflow: "Õhuhulk (m³/h)", e_efficiency: "Soojustagastuse kasutegur (%)", e_power: "Elektritarve (W)",
+    e_airflow: "Õhuhulk (m³/h)", e_efficiency: "Soojustagastuse kasutegur (%)", e_moisture_recovery: "Niiskustagastus (%)", e_power: "Elektritarve (W)",
     e_mode: "Režiim (Auto / Käsitsi)", e_manual_level: "Käsitsi tase", e_boost: "Õhutus (boost)",
     e_overpressure: "Ülerõhk (kamin)", e_power_switch: "Toide (Paus)",
     e_co2: "CO₂", e_co2_setpoint: "CO₂ seadepunkt", e_humidity: "Niiskus", e_humidity_setpoint: "Niiskuse seadepunkt",
@@ -142,7 +143,7 @@ const I18N = {
     auto: "Auto", manual: "Manual",
     overpressure: "Overpressure", boost: "Boost", pause: "Pause",
     dec: "Decrease level", inc: "Increase level", level_aria: (l) => `Level ${l} / 10`,
-    rooms: "Rooms", humidity_short: "RH", rpm: "rpm",
+    rooms: "Rooms", humidity_short: "RH", rpm: "rpm", heat: "heat", moisture: "moisture", recovery: "recovery",
     g_rooms: "Rooms (room CO₂ sensors)", g_temps: "Temperatures", g_fans: "Fans and energy",
     g_control: "Control", g_air: "Air quality", g_status: "Status and filter", g_advanced: "Advanced",
     f_name: "Title", f_theme: "Theme", f_language: "Language",
@@ -158,7 +159,7 @@ const I18N = {
     e_supply_level: "Supply fan level (0–10)", e_exhaust_level: "Extract fan level (0–10)",
     e_supply_rpm: "Supply fan speed (rpm)", e_exhaust_rpm: "Extract fan speed (rpm)",
     e_supply_airflow: "Supply airflow (m³/h)", e_exhaust_airflow: "Extract airflow (m³/h)",
-    e_airflow: "Airflow (m³/h)", e_efficiency: "Heat recovery efficiency (%)", e_power: "Power consumption (W)",
+    e_airflow: "Airflow (m³/h)", e_efficiency: "Heat recovery efficiency (%)", e_moisture_recovery: "Moisture recovery (%)", e_power: "Power consumption (W)",
     e_mode: "Mode (Auto / Manual)", e_manual_level: "Manual level", e_boost: "Boost",
     e_overpressure: "Overpressure (fireplace)", e_power_switch: "Power (Pause)",
     e_co2: "CO₂", e_co2_setpoint: "CO₂ setpoint", e_humidity: "Humidity", e_humidity_setpoint: "Humidity setpoint",
@@ -279,17 +280,27 @@ class AirobotVentCard extends HTMLElement {
     const flow = (l) => (!l || l <= 0) ? "animation-play-state:paused;opacity:0" : `animation-duration:${(6 / l).toFixed(2)}s`;
 
     const t = (k) => this._fmt(this._num(k), 1) + "°";
-    // kanali kiirus: tase · õhuhulk või pöörded
-    const pill = (lvlKey, flowKey, rpmKey, lvl, x, y, col, more) => {
+    const moist = this._num("moisture_recovery");
+    const tempTxt = (key, label, x, y, anchor, col) => this._id(key) ? `<g data-more="${esc(this._id(key))}" style="cursor:pointer">
+        <text x="${x}" y="${y - 24}" font-size="11" fill="${col}" text-anchor="${anchor}">${this._t(label)}</text>
+        <text class="num" x="${x}" y="${y}" font-size="22" fill="${p.text}" text-anchor="${anchor}">${t(key)}</text></g>` : "";
+    const GAUGE = "M12,16A3,3 0 0,1 9,13C9,11.88 9.61,10.9 10.5,10.39L20.21,4.77L14.68,14.35C14.18,15.33 13.17,16 12,16M12,3C13.81,3 15.5,3.5 16.97,4.32L14.87,5.53C14,5.19 13,5 12,5A8,8 0 0,0 4,13C4,15.21 4.89,17.21 6.34,18.65H6.35C6.74,19.04 6.74,19.67 6.35,20.06C5.96,20.45 5.32,20.45 4.93,20.07V20.07C3.12,18.26 2,15.76 2,13A10,10 0 0,1 12,3M22,13C22,15.76 20.88,18.26 19.07,20.07V20.07C18.68,20.45 18.05,20.45 17.66,20.06C17.27,19.67 17.27,19.04 17.66,18.65V18.65C19.11,17.2 20,15.21 20,13C20,12 19.81,11 19.46,10.1L20.67,8C21.5,9.5 22,11.18 22,13Z";
+    const FAN = "M12,11A1,1 0 0,0 11,12A1,1 0 0,0 12,13A1,1 0 0,0 13,12A1,1 0 0,0 12,11M12.5,2C17,2 17.11,5.57 14.75,6.75C13.76,7.24 13.32,8.29 13.13,9.22C13.61,9.42 14.03,9.73 14.35,10.13C18.05,8.13 22.03,8.92 22.03,12.5C22.03,17 18.46,17.1 17.28,14.73C16.78,13.74 15.72,13.3 14.79,13.11C14.59,13.59 14.28,14 13.88,14.34C15.87,18.03 15.08,22 11.5,22C7,22 6.91,18.42 9.27,17.24C10.25,16.75 10.69,15.71 10.89,14.79C10.4,14.59 9.97,14.27 9.65,13.87C5.96,15.85 2,15.07 2,11.5C2,7 5.56,6.89 6.74,9.26C7.24,10.25 8.29,10.68 9.22,10.87C9.41,10.39 9.73,9.97 10.14,9.65C8.15,5.96 8.94,2 12.5,2Z";
+    const rpmTxt = (key, flowKey, x, y) => {
+      const useFlow = this._has(flowKey);
+      const k = useFlow ? flowKey : key;
+      if (!this._st(k)) return "";
+      const v = s.powerOn ? this._num(k) : 0;
+      return `<g data-more="${esc(this._id(k))}" style="cursor:pointer">
+        <g transform="translate(${x} ${y - 14}) scale(0.75)"><path d="${GAUGE}" fill="${p.text}"/></g>
+        <text class="num" x="${x + 24}" y="${y}" font-size="15" fill="${p.text}">${v === null ? "–" : esc(this._fmt(v, 0))} ${useFlow ? "m³/h" : this._t("rpm")}</text></g>`;
+    };
+    const pctTxt = (lvl, key, x, y) => {
       if (lvl === null || lvl === undefined) return "";
-      const flowV = s.powerOn ? this._num(flowKey) : null;
-      const rpmV = s.powerOn ? this._num(rpmKey) : null;
-      const extra = flowV !== null ? `${this._fmt(flowV, 0)} m³/h` : rpmV !== null ? `${this._fmt(rpmV, 0)} ${this._t("rpm")}` : "";
-      const txt = `${this._fmt(lvl, 0)}${extra ? " · " + extra : ""}`;
-      const w = Math.max(28, txt.length * 6.4 + 14);
-      return `<g data-more="${esc(this._id(more) || "")}" style="cursor:pointer">
-        <rect x="${x - w / 2}" y="${y - 11}" width="${w}" height="20" rx="10" fill="${p.hub}" stroke="${col}" stroke-width="1.5"/>
-        <text class="num" x="${x}" y="${y + 3}" font-size="11" fill="${p.text}" text-anchor="middle">${esc(txt)}</text></g>`;
+      const spin = lvl > 0 ? `animation-duration:${(4 / lvl).toFixed(2)}s` : "animation-play-state:paused";
+      return `<g data-more="${esc(this._id(key))}" style="cursor:pointer">
+        <text class="num" x="${x - 24}" y="${y}" font-size="15" fill="${p.text}" text-anchor="end">${esc(this._fmt(lvl * 10, 0))}%</text>
+        <g transform="translate(${x - 18} ${y - 14}) scale(0.75)"><path class="spin" d="${FAN}" fill="${p.text}" style="${spin}"/></g></g>`;
     };
     const eff = this._num("efficiency");
     const airflow = this._num("airflow");
@@ -360,7 +371,9 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
 .num{font-family:ui-monospace,"SF Mono","IBM Plex Mono",Menlo,monospace;font-variant-numeric:tabular-nums}
 .flow{stroke-dasharray:4 20;animation:airflow linear infinite}
 @keyframes airflow{to{stroke-dashoffset:-24}}
-@media (prefers-reduced-motion:reduce){.flow{animation:none}}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.flow,.spin{animation:none}}
 .info{text-align:center;font-size:14px;color:${p.muted}}
 .toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:${p.toggleBg}}
 .toggle button{height:44px;border-radius:10px;text-align:center;font-size:15px}
@@ -394,25 +407,35 @@ button:focus-visible{outline:2px solid ${p.cold};outline-offset:2px}
   </div>
 
   <div class="schem">
-    <svg viewBox="0 0 440 260" role="img" aria-label="${this._t("schematic")}">
-      <rect x="0" y="0" width="220" height="260" fill="${p.coldBg}"/>
-      <rect x="220" y="0" width="220" height="260" fill="${p.warmBg}"/>
-      <text x="14" y="22" font-size="11" font-weight="600" letter-spacing="1" fill="${p.coldText}">${this._t("outside")}</text>
-      <text x="426" y="22" font-size="11" font-weight="600" letter-spacing="1" fill="${p.warmText}" text-anchor="end">${this._t("inside")}</text>
-      <path d="M92 80 H160 L280 184 H348" stroke="${p.cold}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".9"/>
-      <path d="M348 80 H280 L160 184 H92" stroke="${p.warm}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".9"/>
-      <path class="flow" d="M92 80 H160 L280 184 H348" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.sup)}"/>
-      <path class="flow" d="M348 80 H280 L160 184 H92" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.ex)}"/>
-      <g data-more="${esc(this._id("outdoor_temp"))}" style="cursor:pointer"><text x="14" y="52" font-size="12" fill="${p.coldText}">${this._t("outdoor")}</text><text class="num" x="14" y="76" font-size="22" fill="${p.text}">${t("outdoor_temp")}</text></g>
-      <g data-more="${esc(this._id("exhaust_temp"))}" style="cursor:pointer"><text x="14" y="214" font-size="12" fill="${p.coldText}">${this._t("exhaust")}</text><text class="num" x="14" y="238" font-size="22" fill="${p.text}">${t("exhaust_temp")}</text></g>
-      <g data-more="${esc(this._id("extract_temp"))}" style="cursor:pointer"><text x="426" y="52" font-size="12" fill="${p.warmText}" text-anchor="end">${this._t("extract")}</text><text class="num" x="426" y="76" font-size="22" fill="${p.text}" text-anchor="end">${t("extract_temp")}</text></g>
-      <g data-more="${esc(this._id("supply_temp"))}" style="cursor:pointer"><text x="426" y="214" font-size="12" fill="${p.warmText}" text-anchor="end">${this._t("supply")}</text><text class="num" x="426" y="238" font-size="22" fill="${p.text}" text-anchor="end">${t("supply_temp")}</text></g>
-      ${pill("supply_level", "supply_airflow", "supply_rpm", s.sup, 98, 110, p.cold, this._id("supply_rpm") ? "supply_rpm" : "supply_level")}
-      ${pill("exhaust_level", "exhaust_airflow", "exhaust_rpm", s.ex, 342, 110, p.warm, this._id("exhaust_rpm") ? "exhaust_rpm" : "exhaust_level")}
-      <circle cx="220" cy="132" r="58" fill="${p.hub}" stroke="${p.hubLine}" stroke-width="2"/>
-      <text class="num" x="220" y="140" font-size="44" fill="${p.text}" text-anchor="middle">${s.sup === null ? "–" : esc(this._fmt(s.sup, 0))}</text>
-      <text class="num" x="220" y="160" font-size="12" fill="${p.muted}" text-anchor="middle">${airflow !== null && s.powerOn ? esc(this._fmt(airflow, 0)) + " m³/h" : this._t("level")}</text>
-      ${eff !== null ? `<text x="220" y="176" font-size="11" fill="${p.muted}" text-anchor="middle">η ${esc(this._fmt(eff, 0))} %</text>` : ""}
+    <svg viewBox="0 0 440 256" role="img" aria-label="${this._t("schematic")}">
+      <rect x="0" y="0" width="220" height="256" fill="${p.coldBg}"/>
+      <rect x="220" y="0" width="220" height="256" fill="${p.warmBg}"/>
+      <text x="14" y="20" font-size="10" font-weight="600" letter-spacing="1" fill="${p.coldText}">${this._t("outside")}</text>
+      <text x="426" y="20" font-size="10" font-weight="600" letter-spacing="1" fill="${p.warmText}" text-anchor="end">${this._t("inside")}</text>
+      ${airflow !== null && s.powerOn ? `<text class="num" x="220" y="20" font-size="11" fill="${p.muted}" text-anchor="middle" data-more="${esc(this._id("airflow"))}" style="cursor:pointer">${esc(this._fmt(airflow, 0))} m³/h</text>` : ""}
+
+      <path d="M4 88 H150 L290 206 H436" stroke="${p.cold}" stroke-width="16" stroke-linejoin="round" fill="none" opacity=".9"/>
+      <path d="M436 88 H290 L150 206 H4" stroke="${p.warm}" stroke-width="16" stroke-linejoin="round" fill="none" opacity=".9"/>
+      <path class="flow" d="M4 88 H150 L290 206 H436" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.sup)}"/>
+      <path class="flow" d="M436 88 H290 L150 206 H4" stroke="${p.flowDash}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" style="${flow(s.ex)}"/>
+
+      ${tempTxt("outdoor_temp", "outdoor", 14, 68, "start", p.coldText)}
+      ${tempTxt("exhaust_temp", "exhaust", 14, 186, "start", p.coldText)}
+      ${tempTxt("extract_temp", "extract", 426, 68, "end", p.warmText)}
+      ${tempTxt("supply_temp", "supply", 426, 186, "end", p.warmText)}
+
+      ${rpmTxt("supply_rpm", "supply_airflow", 14, 122)}
+      ${rpmTxt("exhaust_rpm", "exhaust_airflow", 14, 242)}
+      ${pctTxt(s.ex, "exhaust_level", 426, 122)}
+      ${pctTxt(s.sup, "supply_level", 426, 242)}
+
+      ${eff !== null || moist !== null ? `<g data-more="${esc(this._id(eff !== null ? "efficiency" : "moisture_recovery"))}" style="cursor:pointer">
+        <circle cx="220" cy="147" r="50" fill="${p.hub}" stroke="${p.hubLine}" stroke-width="2"/>
+        ${eff !== null ? `<text class="num" x="220" y="${moist !== null ? 140 : 154}" font-size="24" fill="${p.text}" text-anchor="middle">${esc(this._fmt(eff, 0))}%</text>
+        <text x="220" y="${moist !== null ? 152 : 168}" font-size="9" fill="${p.muted}" text-anchor="middle">${this._t("heat")}</text>` : ""}
+        ${moist !== null ? `<text class="num" x="220" y="${eff !== null ? 175 : 154}" font-size="${eff !== null ? 16 : 24}" fill="${p.text}" text-anchor="middle">${esc(this._fmt(moist, 0))}%</text>
+        <text x="220" y="${eff !== null ? 187 : 168}" font-size="9" fill="${p.muted}" text-anchor="middle">${this._t("moisture")}</text>` : ""}
+      </g>` : ""}
     </svg>
   </div>
 
@@ -498,7 +521,7 @@ const EDITOR_GROUPS = [
     ["supply_level", ENT("sensor")], ["exhaust_level", ENT("sensor")],
     ["supply_rpm", ENT("sensor")], ["exhaust_rpm", ENT("sensor")],
     ["supply_airflow", ENT("sensor")], ["exhaust_airflow", ENT("sensor")], ["airflow", ENT("sensor")],
-    ["efficiency", ENT("sensor")], ["power", ENT("sensor", { device_class: "power" })],
+    ["efficiency", ENT("sensor")], ["moisture_recovery", ENT("sensor")], ["power", ENT("sensor", { device_class: "power" })],
   ] },
   { key: "g_control", icon: "mdi:tune-variant", fields: [
     ["mode", ENT(["select", "input_select"])], ["manual_level", ENT(["number", "input_number"])],

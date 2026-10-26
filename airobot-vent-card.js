@@ -4,7 +4,7 @@
  * Languages: Estonian, English (follows HA language, or `language: et|en`).
  * MIT License
  */
-const CARD_VERSION = "0.12.0";
+const CARD_VERSION = "0.12.1";
 
 const DEFAULTS = {
   theme: "auto", // auto | light | dark
@@ -93,7 +93,10 @@ const I18N = {
     info_manual: "Käsitsi juhtimine – tase püsib, kuni muudad",
     info_co2: "CO₂ üle piiri – Airobot tõstab taset",
     info_rh: "Niiskus üle piiri – Airobot tõstab taset",
+    info_limit: (n) => `${n} üle piiri – Airobot tõstab taset`,
+    info_level: (l) => `Õhk on korras – Airobot töötab tasemel ${l}`,
     info_ok: "Õhk on puhas – Airobot hoiab madalat taset",
+    q_rh: "Niiskus",
     filter_replace: "Filter: vaheta!",
     filter_days: (d) => `Filter ${d} p`,
     preheater_on: "Eelsoojendi sees", preheater_short: "eelsoojendi", bypass_short: "bypass", preheater_off: "Eelsoojendi väljas",
@@ -142,7 +145,10 @@ const I18N = {
     info_manual: "Manual control – level stays until you change it",
     info_co2: "CO₂ above limit – Airobot is raising the level",
     info_rh: "Humidity above limit – Airobot is raising the level",
+    info_limit: (n) => `${n} above limit – Airobot is raising the level`,
+    info_level: (l) => `Air quality OK – Airobot runs at level ${l}`,
     info_ok: "Air is clean – Airobot keeps a low level",
+    q_rh: "Humidity",
     filter_replace: "Filter: replace!",
     filter_days: (d) => `Filter ${d} d`,
     preheater_on: "Preheater on", preheater_short: "preheater", bypass_short: "bypass", preheater_off: "Preheater off",
@@ -290,10 +296,13 @@ class AirobotVentCard extends HTMLElement {
     if (s.boost) return this._t("info_boost");
     if (s.over) return this._t("info_over");
     if (!s.isAuto) return this._t("info_manual");
-    const co2 = this._num("co2"), co2sp = this._num("co2_setpoint");
-    if (co2 !== null && co2sp !== null && co2 > co2sp) return this._t("info_co2");
-    const rh = this._num("humidity"), rhsp = this._num("humidity_setpoint");
-    if (rh !== null && rhsp !== null && rh > rhsp) return this._t("info_rh");
+    const over = [["co2", "co2_setpoint", "CO₂"], ["humidity", "humidity_setpoint", this._t("q_rh")],
+      ["voc", "voc_setpoint", "VOC"], ["pm25", "pm25_setpoint", "PM2.5"]]
+      .filter(([k, sp]) => { const v = this._num(k), l = this._num(sp); return v !== null && l !== null && l > 0 && v > l; })
+      .map((x) => x[2]);
+    if (over.length) return this._t("info_limit", over.join(", "));
+    const lvl = Math.max(s.sup || 0, s.ex || 0);
+    if (lvl >= 5) return this._t("info_level", Math.round(lvl));
     return this._t("info_ok");
   }
 
